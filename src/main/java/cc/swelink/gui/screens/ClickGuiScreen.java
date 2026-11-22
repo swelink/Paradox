@@ -82,6 +82,7 @@ public class ClickGuiScreen extends Screen {
     private static final float CATEGORY_HEIGHT = ClickGuiStyle.ROW_HEIGHT;
     private final float[][] tabRects = new float[5][];
     private final SpringAnimation highlightY = new SpringAnimation(-1);
+    private final SpringAnimation highlightWidth = new SpringAnimation(-1);
     private final SpringAnimation descriptionReveal = new SpringAnimation();
     private boolean describing;
     private Module describedModule;
@@ -616,15 +617,27 @@ public class ClickGuiScreen extends Screen {
         int selectedIndex = -1;
         for (int i = 0; i < categories.length; i++) if (categories[i] == selectedCategory) selectedIndex = i;
         float radius = ClickGuiStyle.CARD_RADIUS;
+        TextRenderer nameText = renderer.text;
+        float pad = categoryPad();
         if (selectedIndex >= 0) {
             float target = tabRects[selectedIndex][1] - windowY;
             if (highlightY.value() < 0) highlightY.reset(target);
             float y = windowY + highlightY.update(target, 24, 0.85f, deltaTime);
             float[] rect = tabRects[selectedIndex];
-            renderer.sdf.roundedRect(rect[0], y, rect[2], rect[3], radius, mix(ClickGuiStyle.sidebar(), accent.getAsInt(), 0.16f));
+            float targetWidth = tabFit(nameText, categories[selectedIndex], pad, rect[2]);
+            if (highlightWidth.value() < 0) highlightWidth.reset(targetWidth);
+            float width = highlightWidth.update(targetWidth, 24, 0.85f, deltaTime);
+            float phase = ThemeColors.wavePhase();
+            int slices = Math.max(1, (int) Math.ceil(width / 3));
+            for (int slice = 0; slice < slices; slice++) {
+                float from = rect[0] + width * slice / slices;
+                float to = rect[0] + width * (slice + 1) / slices;
+                int wave = ThemeColors.wave(ThemeColors.primary(), ThemeColors.secondary(), (from + to) / 2, phase);
+                renderer.sdf.clippedRoundedRect(rect[0], y, width, rect[3], radius,
+                        mix(ClickGuiStyle.sidebar(), ARGB.opaque(wave), 0.45f),
+                        slice == 0 ? from - 1 : from, y - 1, slice == slices - 1 ? to + 1 : to, y + rect[3] + 1);
+            }
         }
-        TextRenderer nameText = renderer.text;
-        float pad = categoryPad();
         for (int i = 0; i < categories.length; i++) {
             Category category = categories[i];
             float[] rect = tabRects[i];
@@ -636,17 +649,21 @@ public class ClickGuiScreen extends Screen {
                     selected ? 1 : 0)).update(selected ? 1 : 0, 26, 1, deltaTime), 0, 1);
             if (hover > 0.001f) {
                 int fill = ClickGuiStyle.hover();
-                renderer.sdf.roundedRect(rect[0], rect[1], rect[2], rect[3], radius,
+                float width = Math.min(rect[2], tabFit(nameText, category, pad, rect[2]) + hover * 2);
+                renderer.sdf.roundedRect(rect[0], rect[1], width, rect[3], radius,
                         ARGB.color(Math.round(ARGB.alpha(fill) * hover * 0.6f), fill));
             }
             float centerY = rect[1] + rect[3] / 2;
             float iconX = rect[0] + pad + hover * 2;
-            int color = mix(mix(ClickGuiStyle.muted(), ClickGuiStyle.text(), hover), ClickGuiStyle.text(), selection);
-            renderer.textures.icon(category.icon(), iconX, centerY - SIDEBAR_ICON / 2, SIDEBAR_ICON,
-                    AccentWave.text(color, selection));
-            nameText.draw(category.title(), iconX + SIDEBAR_ICON + SIDEBAR_GAP, centerY - nameText.lineHeight(MODULE_FONT_SIZE) / 2,
-                    MODULE_FONT_SIZE, color);
+            int color = mix(mix(ClickGuiStyle.muted(), 0xFFFFFFFF, hover), 0xFFFFFFFF, selection);
+            renderer.textures.icon(category.icon(), iconX, centerY - SIDEBAR_ICON / 2, SIDEBAR_ICON, color);
+            nameText.draw(category.title(), iconX + SIDEBAR_ICON + SIDEBAR_GAP,
+                    centerY - nameText.lineHeight(MODULE_FONT_SIZE) / 2, MODULE_FONT_SIZE, color);
         }
+    }
+
+    private static float tabFit(TextRenderer text, Category category, float pad, float maximum) {
+        return Math.min(maximum, pad * 2 + SIDEBAR_ICON + SIDEBAR_GAP + text.measure(category.title(), MODULE_FONT_SIZE).width());
     }
 
     private Category tabAt(float x, float y) {

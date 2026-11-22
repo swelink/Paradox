@@ -6,7 +6,8 @@ public enum Theme {
     COFFEE("Coffee", 0xFFC69263, 0xFF8B5A3C),
     SAKURA("Sakura", 0xFFFF6FA8, 0xFFFFFFFF),
     GOON("Goon", 0xFFFFFFFF, 0xFFFFF3C4),
-    CANDY("Candy", 0xFFFF2D95, 0xFFFF6A13);
+    CANDY("Candy", 0xFFFF2D95, 0xFFFF6A13),
+    FROST("Frost", 0xFF7DD3FC, 0xFF1D4ED8);
 
     private static final int BASE = 0xFF101010;
     private static final int TEXT = 0xFFF2F1F5;

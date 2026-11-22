@@ -1,0 +1,423 @@
+{
+  "targets": {
+    "ambience_fog": {},
+    "ambience_blur_a": {},
+    "ambience_blur_b": {},
+    "ambience_output": {}
+  },
+  "passes": [
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/ambience",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "minecraft:main"
+        },
+        {
+          "sampler_name": "Depth",
+          "target": "minecraft:main",
+          "use_depth_buffer": true
+        }
+      ],
+      "output": "ambience_fog",
+      "uniforms": {
+        "ParadoxAmbienceInverse": [
+          {
+            "name": "Column0",
+            "type": "vec4",
+            "value": [
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column1",
+            "type": "vec4",
+            "value": [
+              0,
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              1,
+              0
+            ]
+          },
+          {
+            "name": "Column3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        ],
+        "ParadoxAmbienceConfig": [
+          {
+            "name": "Config",
+            "type": "vec4",
+            "value": [
+              24,
+              64,
+              8,
+              0
+            ]
+          },
+          {
+            "name": "Extra",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "ParadoxAmbienceTint": [
+          {
+            "name": "Tint",
+            "type": "vec4",
+            "value": [
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "name": "Camera",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Secondary",
+            "type": "vec4",
+            "value": [
+              1,
+              1,
+              1,
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/ambience_blur",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "ambience_fog"
+        },
+        {
+          "sampler_name": "Depth",
+          "target": "minecraft:main",
+          "use_depth_buffer": true
+        }
+      ],
+      "output": "ambience_blur_a",
+      "uniforms": {
+        "ParadoxAmbienceInverse": [
+          {
+            "name": "Column0",
+            "type": "vec4",
+            "value": [
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column1",
+            "type": "vec4",
+            "value": [
+              0,
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              1,
+              0
+            ]
+          },
+          {
+            "name": "Column3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        ],
+        "ParadoxAmbienceConfig": [
+          {
+            "name": "Config",
+            "type": "vec4",
+            "value": [
+              24,
+              64,
+              8,
+              0
+            ]
+          },
+          {
+            "name": "Extra",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "ParadoxAmbienceDirection": [
+          {
+            "name": "Direction",
+            "type": "vec4",
+            "value": [
+              1,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/ambience_blur",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "ambience_blur_a"
+        },
+        {
+          "sampler_name": "Depth",
+          "target": "minecraft:main",
+          "use_depth_buffer": true
+        }
+      ],
+      "output": "ambience_blur_b",
+      "uniforms": {
+        "ParadoxAmbienceInverse": [
+          {
+            "name": "Column0",
+            "type": "vec4",
+            "value": [
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column1",
+            "type": "vec4",
+            "value": [
+              0,
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              1,
+              0
+            ]
+          },
+          {
+            "name": "Column3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        ],
+        "ParadoxAmbienceConfig": [
+          {
+            "name": "Config",
+            "type": "vec4",
+            "value": [
+              24,
+              64,
+              8,
+              0
+            ]
+          },
+          {
+            "name": "Extra",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "ParadoxAmbienceDirection": [
+          {
+            "name": "Direction",
+            "type": "vec4",
+            "value": [
+              0,
+              1,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/ambience_final",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "ambience_fog"
+        },
+        {
+          "sampler_name": "Blur",
+          "target": "ambience_blur_b"
+        },
+        {
+          "sampler_name": "Depth",
+          "target": "minecraft:main",
+          "use_depth_buffer": true
+        }
+      ],
+      "output": "ambience_output",
+      "uniforms": {
+        "ParadoxAmbienceInverse": [
+          {
+            "name": "Column0",
+            "type": "vec4",
+            "value": [
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column1",
+            "type": "vec4",
+            "value": [
+              0,
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Column2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              1,
+              0
+            ]
+          },
+          {
+            "name": "Column3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        ],
+        "ParadoxAmbienceConfig": [
+          {
+            "name": "Config",
+            "type": "vec4",
+            "value": [
+              24,
+              64,
+              8,
+              0
+            ]
+          },
+          {
+            "name": "Extra",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "minecraft:post/blit",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "ambience_output"
+        }
+      ],
+      "output": "minecraft:main",
+      "uniforms": {
+        "BlitConfig": [
+          {
+            "name": "ColorModulate",
+            "type": "vec4",
+            "value": [
+              1,
+              1,
+              1,
+              1
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

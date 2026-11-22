@@ -1,0 +1,53 @@
+{
+  "targets": {
+    "fog_output": {}
+  },
+  "passes": [
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/accent_fog",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "minecraft:main"
+        },
+        {
+          "sampler_name": "Depth",
+          "target": "minecraft:main",
+          "use_depth_buffer": true
+        }
+      ],
+      "output": "fog_output",
+      "uniforms": {
+        "ParadoxFogInverse": [
+          {"name": "Column0", "type": "vec4", "value": [1, 0, 0, 0]},
+          {"name": "Column1", "type": "vec4", "value": [0, 1, 0, 0]},
+          {"name": "Column2", "type": "vec4", "value": [0, 0, 1, 0]},
+          {"name": "Column3", "type": "vec4", "value": [0, 0, 0, 1]}
+        ],
+        "ParadoxFogTint": [
+          {"name": "Tint", "type": "vec4", "value": [1, 1, 1, 0]}
+        ],
+        "ParadoxFogConfig": [
+          {"name": "Config", "type": "vec4", "value": [16, 64, 0, 0]}
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "minecraft:post/blit",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "fog_output"
+        }
+      ],
+      "output": "minecraft:main",
+      "uniforms": {
+        "BlitConfig": [
+          {"name": "ColorModulate", "type": "vec4", "value": [1, 1, 1, 1]}
+        ]
+      }
+    }
+  ]
+}

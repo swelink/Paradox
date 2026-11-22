@@ -1,0 +1,27 @@
+{
+	"schemaVersion": 1,
+	"id": "paradox",
+	"version": "${version}",
+	"name": "Paradox",
+	"description": "ParadoxClient",
+	"license": "GPL-3.0-only",
+	"icon": "assets/paradox/icons/paradox-logo.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"cc.swelink.Paradox"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	},
+	"mixins": [
+		{
+			"config": "paradox.client.mixins.json",
+			"environment": "client"
+		}
+	]
+}

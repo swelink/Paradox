@@ -1,0 +1,11 @@
+name: Feature request
+description: Suggest a new module or an improvement
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you want
+    validations:
+      required: true

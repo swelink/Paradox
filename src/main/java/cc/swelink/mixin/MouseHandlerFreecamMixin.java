@@ -1,6 +1,7 @@
 package cc.swelink.mixin;
 
 import cc.swelink.Paradox;
+import cc.swelink.systems.modules.combat.AutoTotemModule;
 import cc.swelink.systems.modules.render.FreecamModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -18,5 +19,10 @@ public abstract class MouseHandlerFreecamMixin {
                 && Paradox.MODULES.get(FreecamModule.class).scroll(vertical)) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "onMove", at = @At("HEAD"), cancellable = true)
+    private void paradox$autoTotemLock(long window, double x, double y, double deltaX, double deltaY, CallbackInfo ci) {
+        if (Paradox.MODULES.get(AutoTotemModule.class).locksMouse()) ci.cancel();
     }
 }

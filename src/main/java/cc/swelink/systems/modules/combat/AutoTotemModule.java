@@ -43,6 +43,7 @@ public final class AutoTotemModule extends Module {
     private final MillisecondsSetting closeDelay = addSetting(new MillisecondsSetting("Close delay", 150, 0, 1000));
     private final IntSetting candidates = addSetting(new IntSetting("Candidates", 4, 1, 9));
     private final BooleanSetting mouseMovement = addSetting(new BooleanSetting("Mouse movement", true));
+    private final BooleanSetting lockMouse = addSetting(new BooleanSetting("Lock mouse", true));
     private boolean arrived;
     private boolean sentSprint;
     private Input sentInput = Input.EMPTY;
@@ -59,6 +60,7 @@ public final class AutoTotemModule extends Module {
     public AutoTotemModule() {
         super("AutoTotem", "Puts a totem in offhand or slot", Category.COMBAT);
         mouseSpeed.visibleWhen(mouseMovement::get);
+        lockMouse.visibleWhen(mouseMovement::get);
     }
 
     @Override
@@ -154,13 +156,18 @@ public final class AutoTotemModule extends Module {
             nextY = goalY;
             arrived = true;
         }
-        if (nextX == cursorX && nextY == cursorY) return;
+        if (nextX == cursorX && nextY == cursorY && !locksMouse()) return;
         cursorX = nextX;
         cursorY = nextY;
         SDLMouse.SDL_WarpMouseInWindow(window.handle(), (float) cursorX, (float) cursorY);
         var mouse = (MouseHandlerAccessor) client.mouseHandler;
         mouse.paradox$setXpos(cursorX);
         mouse.paradox$setYpos(cursorY);
+    }
+
+    public boolean locksMouse() {
+        return isEnabled() && lockMouse.get() && mouseMovement.get() && screen != null && target != null
+                && swapped == 0 && !Double.isNaN(cursorX);
     }
 
     public boolean holdsInput() {

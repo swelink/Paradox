@@ -1,5 +1,6 @@
 package cc.swelink.mixin;
 
+import cc.swelink.systems.modules.render.PostProcessingModule;
 import cc.swelink.Paradox;
 import cc.swelink.systems.modules.render.HandShadersModule;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -28,7 +29,7 @@ public abstract class GameRendererHandShadersMixin {
     private void paradox$handShader(CameraRenderState camera, PlayerRenderState player, GpuTextureView depth,
                                   CallbackInfo ci, @Local FeatureRenderDispatcher.PreparedFrame frame) {
         var module = Paradox.MODULES.get(HandShadersModule.class);
-        if (module.handsActive()) {
+        if (module.handsActive() && PostProcessingModule.active()) {
             module.renderer().render(frame, mainRenderTarget, resourcePool, module);
         }
     }
@@ -42,6 +43,7 @@ public abstract class GameRendererHandShadersMixin {
             "Lnet/minecraft/client/renderer/LevelRenderer;render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZZ)V",
             shift = At.Shift.AFTER))
     private void paradox$thirdPersonShader(CallbackInfo ci, @Local CameraRenderState camera) {
+        if (!PostProcessingModule.active()) return;
         var module = Paradox.MODULES.get(HandShadersModule.class);
         module.renderer().renderHeldItems(camera, featureRenderDispatcher, mainRenderTarget, resourcePool, module);
     }

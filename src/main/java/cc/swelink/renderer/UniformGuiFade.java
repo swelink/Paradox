@@ -1,5 +1,6 @@
 package cc.swelink.renderer;
 
+import cc.swelink.systems.modules.render.PostProcessingModule;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -26,7 +27,7 @@ public final class UniformGuiFade {
     }
 
     public static void begin(GuiGraphicsExtractor graphics, float opacity) {
-        if (opacity >= 1) return;
+        if (opacity >= 1 || !PostProcessingModule.active()) return;
         GuiRenderState state = GuiGraphicsAccess.of(graphics).paradox$renderState();
         Request request = new Request(Math.clamp(opacity, 0, 1));
         REQUESTS.put(state, request);

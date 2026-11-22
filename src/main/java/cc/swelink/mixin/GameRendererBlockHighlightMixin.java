@@ -1,5 +1,6 @@
 package cc.swelink.mixin;
 
+import cc.swelink.systems.modules.render.PostProcessingModule;
 import cc.swelink.Paradox;
 import cc.swelink.systems.modules.render.BlockHighlightModule;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -25,6 +26,7 @@ public abstract class GameRendererBlockHighlightMixin {
             "Lnet/minecraft/client/renderer/LevelRenderer;render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZZ)V",
             shift = At.Shift.AFTER))
     private void paradox$blockHighlight(CallbackInfo ci, @Local CameraRenderState camera) {
+        if (!PostProcessingModule.active()) return;
         Paradox.MODULES.get(BlockHighlightModule.class).render(camera, featureRenderDispatcher, mainRenderTarget, resourcePool);
     }
 

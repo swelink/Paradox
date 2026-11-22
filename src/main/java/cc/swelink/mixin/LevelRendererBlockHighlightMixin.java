@@ -1,5 +1,6 @@
 package cc.swelink.mixin;
 
+import cc.swelink.systems.modules.render.PostProcessingModule;
 import cc.swelink.Paradox;
 import cc.swelink.systems.modules.render.BlockHighlightModule;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -12,6 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class LevelRendererBlockHighlightMixin {
     @Inject(method = "submitBlockOutline", at = @At("HEAD"), cancellable = true)
     private void paradox$hideBlockOutline(CallbackInfo ci) {
-        if (Paradox.MODULES.get(BlockHighlightModule.class).active()) ci.cancel();
+        if (Paradox.MODULES.get(BlockHighlightModule.class).active() && PostProcessingModule.active()) ci.cancel();
     }
 }

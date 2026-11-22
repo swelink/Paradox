@@ -1,5 +1,6 @@
 package cc.swelink.renderer;
 
+import cc.swelink.systems.modules.render.PostProcessingModule;
 import cc.swelink.mixin.PictureInPictureRendererAccessor;
 import cc.swelink.Paradox;
 import cc.swelink.utils.render.PostEffectUtils;
@@ -81,7 +82,7 @@ public final class EspPreviewRenderer extends PictureInPictureRenderer<EspPrevie
             var texture = TextureSetup.singleTexture(view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
             renderState.addGuiElement(new Overlay(state, texture, false));
         }
-        if (state.shader()) {
+        if (state.shader() && PostProcessingModule.active()) {
             var view = ((PictureInPictureRendererAccessor) (Object) this).paradox$textureView();
             var chain = Minecraft.getInstance().getShaderManager().getPostChain(Paradox.id("esp_preview"),
                     Set.of(PostChain.MAIN_TARGET_ID));

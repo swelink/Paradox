@@ -1,6 +1,7 @@
 package cc.swelink.renderer;
 
 import cc.swelink.Paradox;
+import cc.swelink.systems.modules.render.PostProcessingModule;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -24,6 +25,7 @@ import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.resources.Identifier;
 
 import org.joml.Matrix3x2fc;
+import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -48,6 +50,8 @@ public final class BlurRenderer implements AutoCloseable {
     private static final Map<GuiRenderState, List<Request>> FRAMES = new IdentityHashMap<>();
     private static final Map<GuiRenderState, Request> OPEN = new IdentityHashMap<>();
     private static final List<TextureTarget[]> POOL = new ArrayList<>();
+    private static final Request DISABLED = new Request(1, 0);
+    private static TextureTarget flat;
     private static boolean closing;
 
     public synchronized void frostedGlass(Renderer2D renderer, Glass glass, float x, float y, float width, float height,
@@ -212,6 +216,7 @@ public final class BlurRenderer implements AutoCloseable {
 
     private static synchronized Request mark(GuiGraphicsExtractor graphics, int downsample, int passes) {
         closing = false;
+        if (!PostProcessingModule.active()) return DISABLED;
         GuiRenderState state = GuiGraphicsAccess.of(graphics).paradox$renderState();
         int clampedDownsample = Math.clamp(downsample, 1, 8);
         int clampedPasses = Math.clamp(passes, 0, 8);
@@ -231,7 +236,17 @@ public final class BlurRenderer implements AutoCloseable {
     }
 
     private static TextureSetup textureSetup(Request request) {
-        return TextureSetup.singleTexture(request.result, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+        GpuTextureView view = request == DISABLED ? flatTexture() : request.result;
+        return TextureSetup.singleTexture(view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+    }
+
+    private static synchronized GpuTextureView flatTexture() {
+        if (flat == null) {
+            flat = new TextureTarget("Paradox flat glass", 1, 1, GpuFormat.RGBA8_UNORM, null);
+            RenderSystem.getDevice().createCommandEncoder().clearColorTexture(flat.getColorTexture(),
+                    new Vector4f(0.2f, 0.2f, 0.2f, 1));
+        }
+        return flat.getColorTextureView();
     }
 
     public static synchronized void prepareFrame(GuiRenderState state) {
@@ -302,6 +317,10 @@ public final class BlurRenderer implements AutoCloseable {
         FRAMES.clear();
         OPEN.clear();
         release();
+        if (flat != null) {
+            flat.destroyBuffers();
+            flat = null;
+        }
     }
 
     private static void release() {

@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render.esp;
 
+import cc.swelink.systems.modules.render.PostProcessingModule;
 import cc.swelink.utils.combat.Targets;
 import cc.swelink.events.EventHandler;
 import cc.swelink.events.OverlayRenderEvent;
@@ -47,7 +48,7 @@ public final class EspModule extends Module {
     }
 
     public boolean shaderActive() {
-        return isEnabled() && active == shader;
+        return isEnabled() && active == shader && PostProcessingModule.active();
     }
 
     public int color() {

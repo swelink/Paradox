@@ -1,5 +1,6 @@
 package cc.swelink.utils.render;
 
+import cc.swelink.systems.modules.render.PostProcessingModule;
 import cc.swelink.Paradox;
 import cc.swelink.systems.modules.render.AmbienceModule;
 import cc.swelink.systems.modules.render.FogModule;
@@ -53,7 +54,8 @@ public final class FogPass {
 
     public static boolean deferCustomGeometry(FeatureRenderDispatcher.PreparedFrame frame, FeatureRenderPhase<?> phase,
                                               FeatureFrameContext context) {
-        if (camera == null || pool == null || !wantsAmbience() && !Paradox.MODULES.get(FogModule.class).rendering()) return false;
+        if (camera == null || pool == null || !PostProcessingModule.active()
+                || !wantsAmbience() && !Paradox.MODULES.get(FogModule.class).rendering()) return false;
         deferredFrame = frame;
         deferredPhase = phase;
         deferredContext = context;
@@ -80,13 +82,14 @@ public final class FogPass {
     }
 
     public static void apply(RenderTarget target) {
-        if (camera == null || pool == null) return;
+        if (camera == null || pool == null || !PostProcessingModule.active()) return;
         var fog = Minecraft.getInstance().getShaderManager().getPostChain(CHAIN, Set.of(PostChain.MAIN_TARGET_ID));
         if (fog != null && Paradox.MODULES.get(FogModule.class).configure(fog, camera, projection)) process(fog, target);
     }
 
     public static boolean wantsAmbience() {
-        return camera != null && pool != null && Paradox.MODULES.get(AmbienceModule.class).rendering();
+        return camera != null && pool != null && PostProcessingModule.active()
+                && Paradox.MODULES.get(AmbienceModule.class).rendering();
     }
 
     public static PostChain ambience() {

@@ -147,7 +147,7 @@ public class ClickGuiScreen extends Screen {
     private static final float SETTING_INSET = 18;
     private static final float SLIDER_INSET = 26;
     private static final float SLIDER_KNOB_RADIUS = 5.5f;
-    private static final float SLIDER_TRACK_Y = 31;
+    private static final float SLIDER_TRACK_Y = 27;
     private static final float SLIDER_TRACK_HEIGHT = 5;
     private static final float SETTINGS_SPACING = ClickGuiStyle.SETTINGS_SPACING;
     private static final float SETTING_CARD_INSET = 8;

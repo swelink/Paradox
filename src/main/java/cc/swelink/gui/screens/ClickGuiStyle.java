@@ -10,11 +10,11 @@ public final class ClickGuiStyle {
     static final float WINDOW_RADIUS = 11.5f;
     static final float CARD_RADIUS = 9.2f;
     static final float MODULE_FONT_SIZE = 14;
-    static final float SETTING_FONT_SIZE = 13;
+    static final float SETTING_FONT_SIZE = 12;
     static final float FONT_SIZE = 14;
     static final float SETTINGS_SPACING = 4;
-    static final float SETTING_ROW_HEIGHT = 28;
-    static final float SLIDER_HEIGHT = 44;
+    static final float SETTING_ROW_HEIGHT = 24;
+    static final float SLIDER_HEIGHT = 36;
     static final float PICKER_HEIGHT = 104;
     static final int BORDER = 0x35FFFFFF;
     private static final int GLASS_ALPHA = 0x55000000;

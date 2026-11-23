@@ -51,7 +51,6 @@ public abstract class GuiModuleListMixin {
         BlurRenderer.endGroup(graphics);
         Paradox.EVENTS.post(new OverlayRenderEvent(minecraft, graphics));
         for (HudElement hud : HudOrder.ordered(Paradox.MODULES.modules())) {
-            BlurRenderer.endGroup(graphics);
             hud.render(minecraft, graphics);
         }
         BlurRenderer.endGroup(graphics);

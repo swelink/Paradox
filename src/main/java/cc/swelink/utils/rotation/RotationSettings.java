@@ -11,7 +11,8 @@ import net.minecraft.client.Minecraft;
 import java.util.function.Consumer;
 
 public final class RotationSettings {
-    private final IntSetting speed = new IntSetting("Speed", 180, 1, 180);
+    private static final float MAX_DEGREES_PER_TICK = 180;
+    private final IntSetting speed = new IntSetting("Speed", 100, 1, 100).bounded();
     private final ModeSetting rotationMode = new ModeSetting("Rotation", "Linear", "Interpolated", "Linear");
     private final BooleanSetting silent = new BooleanSetting("Silent", true);
     private final MoveFixSettings correction;
@@ -39,9 +40,9 @@ public final class RotationSettings {
     private void request(Minecraft client, Rotation target, int priority, MoveFix movement) {
         Rotation rotation = interpolate(client, target);
         if (silent.get()) {
-            Paradox.ROTATIONS.requestSilent(rotation, speed.get(), priority, movement);
+            Paradox.ROTATIONS.requestSilent(rotation, degreesPerTick(), priority, movement);
         } else {
-            Paradox.ROTATIONS.request(rotation, speed.get(), priority);
+            Paradox.ROTATIONS.request(rotation, degreesPerTick(), priority);
         }
     }
 
@@ -82,6 +83,10 @@ public final class RotationSettings {
     }
 
     private float rotationStep(float difference) {
-        return Math.abs(difference) <= 0.001f ? difference : difference * (speed.get() / 180f);
+        return Math.abs(difference) <= 0.001f ? difference : difference * (speed.get() / 100f);
+    }
+
+    private float degreesPerTick() {
+        return MAX_DEGREES_PER_TICK * speed.get() / 100f;
     }
 }

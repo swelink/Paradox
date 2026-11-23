@@ -20,10 +20,10 @@ import net.minecraft.world.phys.Vec3;
 public final class AimbotModule extends Module {
     private final IntSetting range = addSetting(new IntSetting("Range", 3, 1, 6));
     private final IntSetting fov = addSetting(new IntSetting("FOV", 360, 10, 360));
-    private final ModeSetting aimMode = addSetting(new ModeSetting("Aim mode", "Multipoint", "Multipoint", "Head"));
     private final RotationSettings rotations = new RotationSettings(this::addSetting);
     private final RaycastSetting raycast = addSetting(new RaycastSetting());
     private final PercentSetting aimInset = addSetting(new PercentSetting("Aim inset", 25));
+    private final ModeSetting aimMode = addSetting(new ModeSetting("Aim mode", "Multipoint", "Multipoint", "Head"));
 
     public AimbotModule() {
         super("AimBot", "Aims at players", Category.COMBAT);

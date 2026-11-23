@@ -31,10 +31,10 @@ public final class KillauraModule extends Module {
     private final PercentSetting itemCooldown = addSetting(new PercentSetting("Item cooldown", 100));
     private final IntSetting range = addSetting(new IntSetting("Range", 3, 1, 6));
     private final IntSetting fov = addSetting(new IntSetting("FOV", 360, 10, 360));
-    private final ModeSetting aimMode = addSetting(new ModeSetting("Aim mode", "Multipoint", "Multipoint", "Head"));
     private final RotationSettings rotations = new RotationSettings(this::addSetting);
     private final RaycastSetting raycast = addSetting(new RaycastSetting());
     private final PercentSetting aimInset = addSetting(new PercentSetting("Aim inset", 25));
+    private final ModeSetting aimMode = addSetting(new ModeSetting("Aim mode", "Multipoint", "Multipoint", "Head"));
 
     public KillauraModule() {
         super("KillAura", "Hits players around you", Category.COMBAT);

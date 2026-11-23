@@ -8,16 +8,6 @@ final class ClickGuiDraw {
     private ClickGuiDraw() {
     }
 
-    static void drawExpandIcon(Renderer2D renderer, float x, float y, boolean expanded) {
-        drawExpandIcon(renderer, x, y, expanded, ClickGuiStyle.text());
-    }
-
-    static void drawExpandIcon(Renderer2D renderer, float x, float y, boolean expanded, int color) {
-        float direction = expanded ? -1 : 1;
-        renderer.sdf.line(x - 3, y - direction, x, y + 2 * direction, 1, color);
-        renderer.sdf.line(x, y + 2 * direction, x + 3, y - direction, 1, color);
-    }
-
     static int mix(int from, int to, float amount) {
         amount = Math.clamp(amount, 0, 1);
         int color = 0;

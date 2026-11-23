@@ -1,212 +1,175 @@
 package cc.swelink.gui.screens;
 
 import static cc.swelink.gui.screens.ClickGuiDraw.clip;
-import static cc.swelink.gui.screens.ClickGuiDraw.drawExpandIcon;
 import static cc.swelink.gui.screens.ClickGuiDraw.fitLabel;
 import static cc.swelink.gui.screens.ClickGuiDraw.inside;
 import static cc.swelink.gui.screens.ClickGuiDraw.label;
 import static cc.swelink.gui.screens.ClickGuiDraw.mix;
 
-import cc.swelink.Paradox;
-import cc.swelink.gui.previews.EspPlayerPreview;
-import cc.swelink.systems.modules.combat.AutoAnchorModule;
 import cc.swelink.renderer.AccentWave;
-import cc.swelink.renderer.ThemeColors;
-import cc.swelink.renderer.HudBackdrop;
-import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.FrameClock;
-import cc.swelink.renderer.SpringAnimation;
 import cc.swelink.renderer.GuiViewport;
+import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.Renderer2D;
+import cc.swelink.renderer.SpringAnimation;
 import cc.swelink.renderer.TextRenderer;
-import cc.swelink.renderer.UniformGuiFade;
+import cc.swelink.renderer.ThemeColors;
 import cc.swelink.renderer.UiScale;
+import cc.swelink.renderer.UniformGuiFade;
 import cc.swelink.settings.ActionSetting;
+import cc.swelink.settings.BindModeSetting;
 import cc.swelink.settings.BindSetting;
 import cc.swelink.settings.BooleanSetting;
 import cc.swelink.settings.ChoiceSetting;
 import cc.swelink.settings.ColorSetting;
-import cc.swelink.settings.PlayerPreviewSetting;
+import cc.swelink.settings.IntSetting;
 import cc.swelink.settings.Setting;
 import cc.swelink.settings.SliderSetting;
-import cc.swelink.settings.IntSetting;
 import cc.swelink.systems.hud.HudElement;
 import cc.swelink.systems.modules.Category;
-import cc.swelink.systems.modules.client.ClickGuiModule;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.systems.modules.ModuleManager;
+import cc.swelink.systems.modules.client.ClickGuiModule;
+import cc.swelink.systems.modules.combat.AutoAnchorModule;
+import cc.swelink.systems.modules.render.DynamicIslandModule;
+import cc.swelink.systems.modules.render.PostProcessingModule;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
-import net.minecraft.client.Minecraft;
-import cc.swelink.systems.modules.render.DynamicIslandModule;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ARGB;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.IntSupplier;
-import net.minecraft.util.ARGB;
 
 public class ClickGuiScreen extends Screen {
-    private static final float BRAND_LOGO_HEIGHT = 21;
-    private static final String BRAND_TEXT = "Paradox";
-    private static final String BRAND_VERSION = "b1.0";
-    private static final float BRAND_FONT_SIZE = 18.5f;
-    private static final float BRAND_VERSION_SIZE = 9;
-    private static final float BRAND_CAP_HEIGHT = 0.73f;
-    private static final Category[] MODULE_CATEGORIES = {Category.COMBAT, Category.PLAYER, Category.RENDER, Category.MOVEMENT, Category.CLIENT};
-    private static final float WINDOW_WIDTH = 510;
-    private static final float WINDOW_HEIGHT = 320;
-    private static final float TITLE_HEIGHT = 50;
-    private static final float TAB_DROP = 6;
-    private static final float SIDEBAR_ICON = 16;
-    private static final float SIDEBAR_EDGE = 6;
-    private static final float SIDEBAR_GAP = 6;
-    private static final float SIDEBAR_EXTRA = 12;
-    private static final float CONTENT_X = 7;
-    private static final float CONTENT_PAD_Y = 7;
-    private static final float COLUMN_GAP = 0;
-    private static final float CARD_INSET = 3;
-    private static final float VIEW_INSET = CONTENT_PAD_Y + CARD_INSET;
-    private static final float CATEGORY_HEIGHT = ClickGuiStyle.ROW_HEIGHT;
-    private final float[][] tabRects = new float[5][];
-    private final SpringAnimation highlightY = new SpringAnimation(-1);
-    private final SpringAnimation highlightWidth = new SpringAnimation(-1);
-    private final SpringAnimation descriptionReveal = new SpringAnimation();
-    private boolean describing;
-    private Module describedModule;
-    private Module shownDescription;
+    private static final Category[] CATEGORIES = {Category.COMBAT, Category.PLAYER, Category.RENDER,
+            Category.MOVEMENT, Category.CLIENT, Category.CONFIG};
+
+    private static final float PANEL_WIDTH = 185;
+    private static final float PANEL_RADIUS = 8;
+    private static final float HEADER_HEIGHT = 32;
+    private static final float PANEL_GAP = 14;
+    private static final float ROW_HEIGHT = 28;
+    private static final float KEY_FONT = 9;
+    private static final float KEY_PAD = 5;
+    private static final float KEY_HEIGHT = 14;
+    private static final int VISIBLE_MODULES = 18;
+    private static final float TITLE_FONT = 17.5f;
+    private static final float CATEGORY_ICON = 16;
+    private static final float CATEGORY_ICON_GAP = 6;
+    private static final float SCREEN_MARGIN = 8;
+    private static final float BASE_SCALE = 0.8f;
+    private static final float RESIZE_STEP = 0.1f;
+    private static final int BACKGROUND_BLUR_DOWNSAMPLE = 4;
+    private static final int BACKGROUND_BLUR_PASSES = 4;
+    private static final float POP_SPEED = 38;
+    private static final float CLOSED = 0.03f;
+
+    private static final float EDGE = (ROW_HEIGHT - ClickGuiStyle.MODULE_FONT_SIZE * 0.73f) / 2;
+    private static final float KEY_GAP = 7;
+    private static final float ARROW_HALF = 3.5f;
+    private static final float ARROW_RISE = 1.9f;
+    private static final float ARROW_THICKNESS = 1.4f;
+    private static final float ARROW_EXTRA_EDGE = 5;
+
+    private static final float MODULE_FONT_SIZE = ClickGuiStyle.MODULE_FONT_SIZE;
+    private static final float SETTING_FONT = ClickGuiStyle.SETTING_FONT_SIZE;
+    private static final float FONT_SIZE = ClickGuiStyle.FONT_SIZE;
+    private static final float SETTING_ROW_HEIGHT = ClickGuiStyle.SETTING_ROW_HEIGHT;
+    private static final float SETTINGS_SPACING = ClickGuiStyle.SETTINGS_SPACING;
+
+    private static final float SWITCH_WIDTH = 18;
+    private static final float SWITCH_HEIGHT = 10;
+    private static final float MODE_BOX_INSET = EDGE;
+    private static final float MODE_TEXT_PAD = 5;
+    private static final float MODE_BOX_RADIUS = 4;
+    private static final float MODE_ARROW_SPACE = 12;
+    private static final float MODE_LABEL = 18;
+    private static final float SLIDER_TRACK_Y = 27;
+    private static final float SLIDER_TRACK = 4;
+    private static final float SLIDER_KNOB = 5;
+    private static final float CHIP_HEIGHT = 19;
+    private static final float CHIP_PAD = 6;
+    private static final float CHIP_GAP = 4;
+    private static final float CHIP_RADIUS = 3;
+    private static final float CHIP_FONT = 10.5f;
+    private static final float PICKER_RADIUS = 6.9f;
+    private static final float COLOR_FIELD_HEIGHT = 80;
+    private static final float HUE_GAP = 8;
+    private static final float HUE_HEIGHT = 8;
+
     private static final float DESCRIPTION_FONT = 12;
     private static final float DESCRIPTION_PAD = 7;
     private static final float DESCRIPTION_WIDTH = 190;
-    private final TextRenderer measureText = new Renderer2D(null).text;
-    private float sidebarWidth;
-    private Panel previousCategory;
-    private float switchProgress = 1;
-    private static final float SWITCH_DURATION = 0.24f;
-    private Category selectedCategory = Category.CLIENT;
-    private final Map<Category, Float> categoryScroll = new EnumMap<>(Category.class);
-    private static float windowX = Float.NaN;
-    private static float windowY;
-    private boolean draggingWindow;
-    private ConfigPanel configPanel;
+
     private static float resizeScale = 1;
     private static float targetResizeScale = 1;
+
+    private final ModuleManager manager;
+    private final Category[] categories;
+    private final boolean overlay;
+    private final Module owner;
+    private final IntSupplier accent;
+    private final TextRenderer measureText = new Renderer2D(null).text;
+    private final FrameClock clock = new FrameClock();
+    private final List<Panel> panels = new ArrayList<>();
+    private final Set<Module> expanded = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<Setting<?>> expandedModes = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<ColorSetting> expandedColors = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Map<Module, ModuleAnimation> moduleAnimations = new IdentityHashMap<>();
+    private final Map<Setting<?>, SettingAnimation> settingAnimations = new IdentityHashMap<>();
     private final SpringAnimation windowPop = new SpringAnimation();
-    private boolean closing;
+    private final SpringAnimation descriptionReveal = new SpringAnimation();
+
+    private ConfigPanel configPanel;
+    private EditBox sliderInput;
     private Screen returnTo;
     private Screen cleanViewBackground;
-    private static final float POP_SPEED = 38;
-    private static final float CLOSED = 0.03f;
-    private static final float FADE_SPEED = 44;
-
-    private float windowZoom() {
-        return 0.9f + 0.1f * windowPop.value();
-    }
-
-    private float windowOpacity() {
-        return FrameClock.smoothStep(Math.clamp(windowPop.value(), 0, 1));
-    }
-
-    private float dimOpacity() {
-        return windowOpacity();
-    }
-
-    private float categoryFade = 1;
-    private final Map<Category, SpringAnimation> categorySelection = new java.util.EnumMap<>(Category.class);
-    private final Map<Category, SpringAnimation> tabHover = new java.util.EnumMap<>(Category.class);
-    private EditBox sliderInput;
+    private float deltaTime;
+    private float panelFade = 1;
+    private boolean fadeIn;
+    private boolean open;
+    private boolean closing;
+    private boolean describing;
+    private Module describedModule;
+    private Module shownDescription;
     private IntSetting editingSlider;
     private float sliderClickX = Float.NaN;
     private float sliderInputLeft;
     private float sliderInputRight;
     private float sliderInputCenterY;
     private long sliderEditedAt;
-    private boolean fadeIn;
-    private float switchFade = 1;
-
-    private float panelWidth() { return columnWidth(); }
-    private float panelSpan() { return contentWidth(); }
-    private float contentWidth() { return WINDOW_WIDTH - sidebarWidth() - CONTENT_X * 2; }
-    private float columnWidth() { return contentWidth(); }
-    private float colorFieldWidth() { return panelWidth() - settingInset() * 2; }
-    private static final float SCREEN_MARGIN = 0;
-    private static final float PANEL_RADIUS = 18.4f;
-    private static final float CONTENT_INSET = ClickGuiStyle.CONTENT_INSET;
-    private static final float SETTING_INSET = 18;
-    private static final float SLIDER_INSET = 26;
-    private static final float SLIDER_KNOB_RADIUS = 5.5f;
-    private static final float SLIDER_TRACK_Y = 27;
-    private static final float SLIDER_TRACK_HEIGHT = 5;
-    private static final float SETTINGS_SPACING = ClickGuiStyle.SETTINGS_SPACING;
-    private static final float SETTING_CARD_INSET = 8;
-    private static final float PAGE_FONT_SIZE = 15;
-    private float settingFont = ClickGuiStyle.SETTING_FONT_SIZE;
-    private static final float ROW_HEIGHT = CATEGORY_HEIGHT;
-    private static final float SETTING_ROW_HEIGHT = ClickGuiStyle.SETTING_ROW_HEIGHT;
-    private static final float SLIDER_HEIGHT = ClickGuiStyle.SLIDER_HEIGHT;
-    private static final float SETTING_TEXT_OFFSET = 0;
-    private static final float FONT_SIZE = ClickGuiStyle.FONT_SIZE;
-    private static final float MODULE_FONT_SIZE = ClickGuiStyle.MODULE_FONT_SIZE;
-    private static final float PICKER_HEIGHT = ClickGuiStyle.PICKER_HEIGHT;
-    private static final float PICKER_RADIUS = 6.9f;
-    private static final float COLOR_FIELD_HEIGHT = 80;
-    private static final float HUE_GAP = 8;
-    private static final float HUE_HEIGHT = 8;
-
-    private final ModuleManager manager;
-    private final boolean hudOnly;
-    private final boolean configOnly;
-    private final List<Panel> panels = new ArrayList<>();
-    private final Set<Module> expanded = Collections.newSetFromMap(new IdentityHashMap<>());
-    private final Set<Setting<?>> expandedModes = Collections.newSetFromMap(new IdentityHashMap<>());
-    private final FrameClock clock = new FrameClock();
-    private final Map<Module, ModuleAnimation> moduleAnimations = new IdentityHashMap<>();
-    private final Map<Setting<?>, SettingAnimation> settingAnimations = new IdentityHashMap<>();
-    private float deltaTime;
-    private final Module owner;
-    private final IntSupplier accent;
-    private final Set<ColorSetting> expandedColors = Collections.newSetFromMap(new IdentityHashMap<>());
-    private ColorSetting draggedColor;
-    private Panel colorPanel;
-    private boolean draggingHue;
     private BindSetting binding;
     private int capturedBindKey = -1;
-    private boolean open;
     private Panel draggedPanel;
     private float dragX;
     private float dragY;
     private SliderSetting draggedSlider;
-    private Panel sliderPanel;
     private float sliderX;
-    private float colorX;
-    private final Map<PlayerPreviewSetting, EspPlayerPreview> playerPreviews = new IdentityHashMap<>();
-    private PlayerPreviewSetting draggedPreview;
+    private ColorSetting draggedColor;
+    private Panel colorPanel;
+    private boolean draggingHue;
 
     public ClickGuiScreen(ModuleManager manager, Module owner, IntSupplier accent) {
-        this(manager, owner, accent, false);
+        this(manager, owner, accent, CATEGORIES, false);
     }
 
-    protected ClickGuiScreen(ModuleManager manager, Module owner, IntSupplier accent, boolean hudOnly) {
-        this(manager, owner, accent, hudOnly, false);
-    }
-
-    protected ClickGuiScreen(ModuleManager manager, Module owner, IntSupplier accent, boolean hudOnly, boolean configOnly) {
+    ClickGuiScreen(ModuleManager manager, Module owner, IntSupplier accent, Category[] categories, boolean overlay) {
         super(Component.literal("Paradox"));
-        this.hudOnly = hudOnly;
-        this.configOnly = configOnly;
-        if (configOnly) selectedCategory = Category.CONFIG;
+        this.categories = categories;
+        this.overlay = overlay;
         this.manager = manager;
         this.owner = owner;
         this.accent = accent;
@@ -222,43 +185,29 @@ public class ClickGuiScreen extends Screen {
             sliderInput.setMaxLength(12);
         }
         boolean opening = !open;
-        if (opening) {
-            tickClosedAnimations();
-        }
+        if (opening) tickClosedAnimations();
         open = true;
         if (opening) {
             closing = false;
             capturedBindKey = -1;
             windowPop.reset(fadeIn ? 1 : 0);
         }
-
-        categoryFade = fadeIn ? 0 : 1;
-        switchFade = fadeIn ? 0 : 1;
+        panelFade = fadeIn ? 0 : 1;
         fadeIn = false;
-        layoutWindow();
-        if (panels.isEmpty()) panels.add(new Panel(selectedCategory, contentX(), windowY + panelTop()));
-        positionContent();
-
+        if (panels.isEmpty()) layoutPanels();
         for (Panel panel : panels) {
             clampPanel(panel);
             panel.x = panel.targetX;
             panel.y = panel.targetY;
-            panel.xMotion.reset(panel.x);
-            panel.yMotion.reset(panel.y);
         }
-
         clock.reset();
-        if (configPanel != null) configPanel.resetClock();
+        Screen behind = screenBehind();
+        if (behind != null && (behind.width != width || behind.height != height)) behind.resize(width, height);
+        configPanel.resetClock();
     }
 
-    protected float scale() {
-        float preferred = UiScale.of(minecraft) * resizeScale;
-        return Math.min(preferred, fitScale(minecraft));
-    }
-
-    public static float fitScale(Minecraft client) {
-        GuiViewport viewport = GuiViewport.atScale(client, 1);
-        return Math.min(viewport.width() / (WINDOW_WIDTH + 24), viewport.height() / (WINDOW_HEIGHT + 24));
+    private float scale() {
+        return UiScale.of(minecraft) * resizeScale * BASE_SCALE;
     }
 
     private float screenWidth() {
@@ -269,39 +218,93 @@ public class ClickGuiScreen extends Screen {
         return GuiViewport.atScale(minecraft, scale()).height();
     }
 
+    private float maxBodyHeight() {
+        return Math.max(ROW_HEIGHT * 2, Math.min(ROW_HEIGHT * VISIBLE_MODULES, screenHeight() - SCREEN_MARGIN * 2 - HEADER_HEIGHT));
+    }
+
+    private void layoutPanels() {
+        float available = screenWidth() - SCREEN_MARGIN * 2;
+        int perRow = Math.max(1, Math.min(categories.length, (int) ((available + PANEL_GAP) / (PANEL_WIDTH + PANEL_GAP))));
+        float rowWidth = perRow * PANEL_WIDTH + (perRow - 1) * PANEL_GAP;
+        float left = (screenWidth() - rowWidth) / 2;
+        float top = Math.max(SCREEN_MARGIN, (screenHeight() - HEADER_HEIGHT - maxBodyHeight()) / 2);
+        for (int i = 0; i < categories.length; i++) {
+            float x = left + (i % perRow) * (PANEL_WIDTH + PANEL_GAP);
+            float y = top + HEADER_HEIGHT + (i / perRow) * (HEADER_HEIGHT + maxBodyHeight() + PANEL_GAP);
+            panels.add(new Panel(categories[i], x, y));
+        }
+    }
+
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        if (minecraft.level == null) extractPanorama(graphics, partialTick);
+        Screen behind = screenBehind();
+        if (behind != null) {
+            behind.extractBackground(graphics, -1, -1, partialTick);
+            graphics.nextStratum();
+            behind.extractRenderState(graphics, -1, -1, partialTick);
+        } else if (minecraft.level == null) {
+            extractPanorama(graphics, partialTick);
+        }
+    }
+
+    private Screen screenBehind() {
+        Screen behind = cleanViewBackground;
+        return behind == null || behind == this || behind instanceof ClickGuiScreen || behind instanceof HudEditorScreen
+                ? null : behind;
+    }
+
+    private float windowZoom() {
+        return 0.9f + 0.1f * windowPop.value();
+    }
+
+    private float windowOpacity() {
+        return FrameClock.smoothStep(Math.clamp(windowPop.value(), 0, 1));
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         deltaTime = clock.nextDelta();
+        float oldWidth = screenWidth();
+        float oldHeight = screenHeight();
         resizeScale = FrameClock.approach(resizeScale, targetResizeScale, 18, deltaTime);
+        float shiftX = (screenWidth() - oldWidth) / 2;
+        float shiftY = (screenHeight() - oldHeight) / 2;
+        if (shiftX != 0 || shiftY != 0) {
+            for (Panel panel : panels) {
+                panel.targetX += shiftX;
+                panel.targetY += shiftY;
+                clampPanel(panel);
+                panel.x = panel.targetX;
+                panel.y = panel.targetY;
+            }
+        }
         updateAnimations();
-        windowPop.update(closing ? 0 : 1, POP_SPEED, closing ? 1 : 0.9f, deltaTime);
-        categoryFade = Math.min(1, categoryFade + deltaTime / 0.07f);
-        switchFade = Math.min(1, switchFade + deltaTime / 0.1f);
+        windowPop.update(closing ? 0 : 1, POP_SPEED, 1, deltaTime);
+        panelFade = Math.min(1, panelFade + deltaTime / 0.07f);
 
         float x = guiMouseX(mouseX);
         float y = guiMouseY(mouseY);
-        if (draggingWindow) {
-            windowX = x - dragX;
-            windowY = y - dragY;
-        } else if (draggedPanel != null) {
+        if (draggedPanel != null) {
             draggedPanel.targetX = x - dragX;
             draggedPanel.targetY = y - dragY;
             clampPanel(draggedPanel);
         }
-        layoutWindow();
-        positionContent();
 
         Panel hoveredPanel = panelAt(x, y);
-        graphics.nextStratum();
-        try (var renderer = new Renderer2D(graphics)) {
-            int dim = ClickGuiStyle.dim();
-            renderer.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(),
-                    ARGB.color(Math.round(ARGB.alpha(dim) * dimOpacity()), dim));
+        if (!overlay && PostProcessingModule.active()) {
+            graphics.nextStratum();
+            try (var renderer = new Renderer2D(graphics)) {
+                renderer.blur.backdrop(renderer, 0, 0, graphics.guiWidth(), graphics.guiHeight(), BACKGROUND_BLUR_DOWNSAMPLE,
+                        BACKGROUND_BLUR_PASSES, ARGB.color(Math.round(255 * windowOpacity()), 0xFFFFFF));
+            }
+        }
+        if (!overlay) {
+            graphics.nextStratum();
+            try (var renderer = new Renderer2D(graphics)) {
+                int dim = ClickGuiStyle.dim();
+                renderer.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(),
+                        ARGB.color(Math.round(ARGB.alpha(dim) * windowOpacity()), dim));
+            }
         }
         graphics.nextStratum();
         UniformGuiFade.begin(graphics, windowOpacity());
@@ -309,38 +312,18 @@ public class ClickGuiScreen extends Screen {
         graphics.nextStratum();
         graphics.pose().pushMatrix();
         graphics.pose().scale(scale());
-
         try (Renderer2D renderer = new Renderer2D(graphics, TextRenderer.Font.INTER)) {
-            float centerX = windowPivotX();
-            float centerY = windowPivotY();
+            float centerX = screenWidth() / 2;
+            float centerY = screenHeight() / 2;
             graphics.pose().translate(centerX, centerY);
             graphics.pose().scale(windowZoom());
             graphics.pose().translate(-centerX, -centerY);
-            drawWindow(renderer, x, y);
-
-            try (var clip = clip(renderer, windowX + sidebarWidth(), windowY, WINDOW_WIDTH - sidebarWidth(), WINDOW_HEIGHT)) {
-                float opacity = FrameClock.smoothStep(categoryFade);
-                switchProgress = Math.min(1, switchProgress + deltaTime / SWITCH_DURATION);
-                if (switchProgress >= 1) previousCategory = null;
-                if (previousCategory == null) {
-                    for (Panel panel : panels) {
-                        drawCategory(renderer, panel, x, y, opacity);
-                    }
-                } else {
-                    if (switchProgress < 0.5f) {
-                        positionPanel(previousCategory);
-                        float out = 1 - FrameClock.smoothStep(switchProgress * 2);
-                        if (out > 0.002f) drawCategory(renderer, previousCategory, -1, -1, opacity * out);
-                    } else {
-                        float in = FrameClock.smoothStep(switchProgress * 2 - 1);
-                        for (Panel panel : panels) {
-                            if (in > 0.002f) drawCategory(renderer, panel, x, y, opacity * in);
-                        }
-                    }
-                }
+            float opacity = FrameClock.smoothStep(panelFade);
+            for (Panel panel : panels) {
+                boolean top = panel == hoveredPanel;
+                drawPanel(renderer, panel, top ? x : -1, top ? y : -1, opacity);
             }
             drawDescription(renderer, x, y);
-
         } finally {
             graphics.pose().popMatrix();
         }
@@ -348,71 +331,33 @@ public class ClickGuiScreen extends Screen {
     }
 
     private float guiMouseX(double x) {
-        float local = (float) x / scale();
-        float center = windowPivotX();
-        return center + (local - center) / windowZoom();
+        float center = screenWidth() / 2;
+        return center + ((float) x / scale() - center) / windowZoom();
     }
 
     private float guiMouseY(double y) {
-        float local = (float) y / scale();
-        float center = windowPivotY();
-        return center + (local - center) / windowZoom();
+        float center = screenHeight() / 2;
+        return center + ((float) y / scale() - center) / windowZoom();
     }
 
-    private float panelRadius() {
-        return PANEL_RADIUS;
+    private int accentColor() {
+        return ARGB.opaque(ThemeColors.primary());
     }
 
-    private Category[] sidebarCategories() {
-        return configOnly ? new Category[0] : MODULE_CATEGORIES;
+    private int bodyColor() {
+        return ClickGuiStyle.PANEL_BODY;
     }
 
-    private void layoutWindow() {
-        if (Float.isNaN(windowX)) {
-            windowX = (screenWidth() - WINDOW_WIDTH) / 2;
-            windowY = (screenHeight() - WINDOW_HEIGHT) / 2;
-        }
-        windowX = Math.clamp(windowX, SCREEN_MARGIN, Math.max(SCREEN_MARGIN, screenWidth() - WINDOW_WIDTH - SCREEN_MARGIN));
-        windowY = Math.clamp(windowY, SCREEN_MARGIN, Math.max(SCREEN_MARGIN, screenHeight() - WINDOW_HEIGHT - SCREEN_MARGIN));
+    private int settingsColor() {
+        return ClickGuiStyle.PANEL_INSET;
     }
 
-    private float windowPivotX() {
-        return HudPopAnimation.pivotX(windowX, WINDOW_WIDTH, windowEdges());
+    private int textColor() {
+        return ClickGuiStyle.MODULE_TEXT;
     }
 
-    private float windowPivotY() {
-        return HudPopAnimation.pivotY(windowY, WINDOW_HEIGHT, windowEdges());
-    }
-
-    private int windowEdges() {
-        return 0;
-    }
-
-    private void selectCategory(Category category) {
-        if (selectedCategory == category) return;
-        selectedCategory = category;
-        if (category == Category.CONFIG) configPanel.refresh();
-        rememberScroll();
-        previousCategory = panels.isEmpty() ? null : panels.getFirst();
-        switchProgress = previousCategory == null ? 1 : 0;
-        panels.clear();
-        Panel panel = new Panel(category, contentX(), windowY + panelTop());
-        setScroll(panel, categoryScroll.getOrDefault(category, 0f));
-        panels.add(panel);
-        draggedSlider = null;
-        sliderPanel = null;
-        draggedColor = null;
-        colorPanel = null;
-        draggedPreview = null;
-    }
-
-    private void rememberScroll() {
-        for (Panel panel : panels) categoryScroll.put(panel.category, panel.targetScroll);
-    }
-
-    private static void setScroll(Panel panel, float scroll) {
-        panel.scroll = panel.targetScroll = scroll;
-        panel.scrollMotion.reset(scroll);
+    private float colorFieldWidth() {
+        return PANEL_WIDTH - EDGE * 2;
     }
 
     private static boolean inHudEditor(Module module) {
@@ -423,56 +368,10 @@ public class ClickGuiScreen extends Screen {
         fadeIn = true;
     }
 
-    public void openConfig() {
-        Screen back = returnTo;
-        returnTo = null;
-        manager.get(ClickGuiModule.class).configScreen().show(back, true);
-    }
-
     public void openHudEditor() {
         Screen back = returnTo;
         returnTo = null;
         minecraft.gui.setScreen(new HudEditorScreen(manager, accent, back, true));
-    }
-
-    private void positionContent() {
-        if (panels.isEmpty()) return;
-        positionPanel(panels.getFirst());
-    }
-
-    private void positionPanel(Panel panel) {
-        panel.x = panel.targetX = contentX();
-        panel.y = panel.targetY = windowY + panelTop();
-        panel.xMotion.reset(panel.x);
-        panel.yMotion.reset(panel.y);
-    }
-
-    private float settingInset() {
-        return SETTING_INSET;
-    }
-
-    private float sliderInset() {
-        return SLIDER_INSET;
-    }
-
-    private boolean standalone() {
-        return hudOnly || configOnly;
-    }
-
-    private float contentX() {
-        return windowX + sidebarWidth() + CONTENT_X;
-    }
-
-    private float panelTop() {
-        return 0;
-    }
-
-    private float panelBodyHeight() {
-        return WINDOW_HEIGHT - panelTop();
-    }
-
-    protected boolean windowContains(double mouseX, double mouseY) {
-        return inside(guiMouseX(mouseX), guiMouseY(mouseY), windowX, windowY, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
     private void drawDescription(Renderer2D renderer, float mouseX, float mouseY) {
@@ -485,297 +384,76 @@ public class ClickGuiScreen extends Screen {
         var size = renderer.text.measureWrapped(text, DESCRIPTION_FONT, DESCRIPTION_WIDTH - DESCRIPTION_PAD * 2);
         float width = size.width() + DESCRIPTION_PAD * 2;
         float height = size.height() + DESCRIPTION_PAD * 2;
-        float x = Math.min(mouseX + 10, windowX + WINDOW_WIDTH - width - 4);
+        float x = Math.min(mouseX + 10, screenWidth() - width - 4);
         float y = mouseY + 12;
-        if (y + height > windowY + WINDOW_HEIGHT - 4) y = mouseY - height - 6;
+        if (y + height > screenHeight() - 4) y = mouseY - height - 6;
         float baseOpacity = renderer.opacity();
         renderer.opacity(baseOpacity * reveal);
         try {
             renderer.sdf.roundedRect(x, y + 4 * (1 - reveal), width, height, ClickGuiStyle.CARD_RADIUS - 2, ClickGuiStyle.raised());
             renderer.text.drawWrapped(text, x + DESCRIPTION_PAD, y + 4 * (1 - reveal) + DESCRIPTION_PAD, DESCRIPTION_FONT,
-                    DESCRIPTION_WIDTH - DESCRIPTION_PAD * 2, ClickGuiStyle.text());
+                    DESCRIPTION_WIDTH - DESCRIPTION_PAD * 2, textColor());
         } finally {
             renderer.opacity(baseOpacity);
         }
     }
 
-    private void drawCategory(Renderer2D renderer, Panel panel, float mouseX, float mouseY, float opacity) {
+    private void drawPanel(Renderer2D renderer, Panel panel, float mouseX, float mouseY, float opacity) {
+        List<Row> rows = rows(panel);
+        float body = visibleBodyHeight(panel, rows);
+        float top = panel.y - HEADER_HEIGHT;
+        float height = HEADER_HEIGHT + body;
+        renderer.opacity(opacity);
         try {
-            renderer.opacity(opacity);
-            if (panel.category == Category.CONFIG) {
-                configPanel.render(renderer, panel.x, panel.y + CONTENT_PAD_Y, contentWidth(),
-                        panelBodyHeight() - CONTENT_PAD_Y * 2, mouseX, mouseY, accent.getAsInt());
-            } else {
-                drawPanel(renderer, panel, mouseX, mouseY);
+            if (manager.get(ClickGuiModule.class).shadows()) {
+                HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, 0)));
+            }
+            renderer.sdf.roundedRect(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, bodyColor());
+            renderer.sdf.clippedRoundedRect(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, ClickGuiStyle.PANEL_HEADER,
+                    panel.x, top, panel.x + PANEL_WIDTH, panel.y);
+            float centerY = top + HEADER_HEIGHT / 2;
+            float iconX = panel.x + EDGE;
+            renderer.textures.icon(panel.category.icon(), iconX, centerY - CATEGORY_ICON / 2, CATEGORY_ICON, ClickGuiStyle.MODULE_TEXT);
+            renderer.text.draw(panel.category.title(), iconX + CATEGORY_ICON + CATEGORY_ICON_GAP,
+                    centerY - renderer.text.lineHeight(TITLE_FONT) / 2, TITLE_FONT, ClickGuiStyle.TITLE);
+            drawChevron(renderer, arrowCenter(panel.x), centerY, ARROW_HALF, ARROW_RISE, ARROW_THICKNESS,
+                    panel.amount, ClickGuiStyle.ARROW);
+            if (body > 0.5f) {
+                try (var clip = clip(renderer, panel.x - 1, panel.y - 1, PANEL_WIDTH + 2, body + 2)) {
+                    if (panel.category == Category.CONFIG) {
+                        configPanel.shape(top, height, PANEL_RADIUS);
+                        configPanel.render(renderer, panel.x, panel.y, PANEL_WIDTH, body, mouseX, mouseY, accent.getAsInt());
+                    } else {
+                        drawBody(renderer, panel, rows, body, mouseX, mouseY);
+                    }
+                }
             }
         } finally {
             renderer.opacity(1);
         }
     }
 
-    private void drawWindow(Renderer2D renderer, float mouseX, float mouseY) {
-        float radius = ClickGuiStyle.WINDOW_RADIUS;
-        if (manager.get(ClickGuiModule.class).shadows()) {
-            HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(windowX, windowY, WINDOW_WIDTH, WINDOW_HEIGHT, radius,
-                    windowEdges())));
-        }
-        renderer.sdf.roundedRect(windowX, windowY, WINDOW_WIDTH, WINDOW_HEIGHT, radius, ClickGuiStyle.header());
-        float reach = radius + 1;
-        renderer.sdf.clippedDockedRect(windowX, windowY, WINDOW_WIDTH, WINDOW_HEIGHT, radius, ClickGuiStyle.sidebar(),
-                windowEdges(), windowX - reach, windowY - reach, windowX + sidebarWidth(), windowY + WINDOW_HEIGHT + reach);
-        renderer.sdf.clippedDockedRect(windowX, windowY, WINDOW_WIDTH, WINDOW_HEIGHT, radius, ClickGuiStyle.header(),
-                windowEdges(), windowX + sidebarWidth(), windowY - reach, windowX + WINDOW_WIDTH + reach, windowY + WINDOW_HEIGHT + reach);
-        renderer.sdf.roundedRect(windowX + sidebarWidth() - 1, windowY, 1, WINDOW_HEIGHT, 0,
-                mix(ClickGuiStyle.sidebar(), ClickGuiStyle.text(), 0.05f));
-        float reveal = FrameClock.smoothStep(switchFade);
-        float tabsOpacity = configOnly ? 1 : standalone() ? 1 - reveal : reveal;
-        float baseOpacity = renderer.opacity();
-        float brandOpacity = standalone() ? 1 - reveal : reveal;
-        if (brandOpacity > 0.001f) {
-            renderer.opacity(baseOpacity * brandOpacity);
-            try {
-                drawBrand(renderer);
-            } finally {
-                renderer.opacity(baseOpacity);
-            }
-        }
-        renderer.opacity(baseOpacity * tabsOpacity);
-        try {
-            drawTabs(renderer, mouseX, mouseY, tabsOpacity > 0.001f);
-        } finally {
-            renderer.opacity(baseOpacity);
-        }
-    }
-
-    private float[] brandLayout(Renderer2D renderer) {
-        TextRenderer brandText = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
-        float fit = Math.min(1, (sidebarWidth() - SIDEBAR_EDGE * 2) / brandWidth(renderer.text));
-        float height = BRAND_LOGO_HEIGHT * fit;
-        float width = 0;
-        float fontSize = BRAND_FONT_SIZE * fit;
-        float versionSize = BRAND_VERSION_SIZE * fit;
-        float gap = 0;
-        float textWidth = brandText.measure(BRAND_TEXT, fontSize).width();
-        float centerY = windowY + TITLE_HEIGHT / 2;
-        float versionWidth = renderer.text.measure(BRAND_VERSION, versionSize).width();
-        float total = width + gap + textWidth + 2 * fit + versionWidth;
-        float left = windowX + (sidebarWidth() - total) / 2;
-        float top = centerY - height / 2;
-        float baseline = centerY + fontSize * BRAND_CAP_HEIGHT / 2;
-        float textX = left + width + gap;
-        float versionTop = baseline - fontSize * BRAND_CAP_HEIGHT
-                - renderer.text.ascent(versionSize) + versionSize * BRAND_CAP_HEIGHT;
-        return new float[] {left, top, width, height, 0,
-                textX, baseline - brandText.ascent(fontSize), fontSize,
-                textX + textWidth + 2 * fit, versionTop, versionSize, 1};
-    }
-
-    private float brandWidth(TextRenderer text) {
-        return text.withFont(TextRenderer.Font.INTER_MEDIUM).measure(BRAND_TEXT, BRAND_FONT_SIZE).width() + 2
-                + text.measure(BRAND_VERSION, BRAND_VERSION_SIZE).width();
-    }
-
-    private float categoryPad() {
-        return (ROW_HEIGHT - CARD_INSET * 2 - SIDEBAR_ICON) / 2;
-    }
-
-    private float sidebarWidth() {
-        if (sidebarWidth > 0) return sidebarWidth;
-        float widest = 0;
-        for (Category category : MODULE_CATEGORIES) {
-            widest = Math.max(widest, measureText.measure(category.title(), MODULE_FONT_SIZE).width());
-        }
-        sidebarWidth = Math.round((SIDEBAR_EDGE + categoryPad()) * 2 + SIDEBAR_ICON + SIDEBAR_GAP + widest + SIDEBAR_EXTRA);
-        return sidebarWidth;
-    }
-
-    private void drawBrand(Renderer2D renderer) {
-        float[] layout = brandLayout(renderer);
-        TextRenderer brandText = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
-        String first = BRAND_TEXT.substring(0, 1);
-        String rest = BRAND_TEXT.substring(1);
-        float restX = layout[5] + brandText.measure(BRAND_TEXT, layout[7]).width() - brandText.measure(rest, layout[7]).width();
-        brandText.drawColored(first, layout[5], layout[6], layout[7], AccentWave.pulse());
-        brandText.draw(rest, restX, layout[6], layout[7], ClickGuiStyle.text());
-        renderer.text.draw(BRAND_VERSION, layout[8], layout[9], layout[10], ClickGuiStyle.muted());
-    }
-
-    private void layoutTabs() {
-        Category[] categories = sidebarCategories();
-        float inset = SIDEBAR_EDGE;
-        float x = windowX + inset;
-        float width = sidebarWidth() - inset * 2;
-        for (int i = 0; i < categories.length; i++) {
-            float y = windowY + CONTENT_PAD_Y + CARD_INSET + TAB_DROP + (i + 1) * ROW_HEIGHT;
-            tabRects[i] = new float[] {x, y, width, ROW_HEIGHT - CARD_INSET * 2, width};
-        }
-    }
-
-    private void drawTabs(Renderer2D renderer, float mouseX, float mouseY, boolean interactive) {
-        layoutTabs();
-        Category[] categories = sidebarCategories();
-        int selectedIndex = -1;
-        for (int i = 0; i < categories.length; i++) if (categories[i] == selectedCategory) selectedIndex = i;
-        float radius = ClickGuiStyle.CARD_RADIUS;
-        TextRenderer nameText = renderer.text;
-        float pad = categoryPad();
-        if (selectedIndex >= 0) {
-            float target = tabRects[selectedIndex][1] - windowY;
-            if (highlightY.value() < 0) highlightY.reset(target);
-            float y = windowY + highlightY.update(target, 24, 0.85f, deltaTime);
-            float[] rect = tabRects[selectedIndex];
-            float targetWidth = tabFit(nameText, categories[selectedIndex], pad, rect[2]);
-            if (highlightWidth.value() < 0) highlightWidth.reset(targetWidth);
-            float width = highlightWidth.update(targetWidth, 24, 0.85f, deltaTime);
-            float phase = ThemeColors.wavePhase();
-            int slices = Math.max(1, (int) Math.ceil(width / 3));
-            for (int slice = 0; slice < slices; slice++) {
-                float from = rect[0] + width * slice / slices;
-                float to = rect[0] + width * (slice + 1) / slices;
-                int wave = ThemeColors.wave(ThemeColors.primary(), ThemeColors.secondary(), (from + to) / 2, phase);
-                renderer.sdf.clippedRoundedRect(rect[0], y, width, rect[3], radius,
-                        mix(ClickGuiStyle.sidebar(), ARGB.opaque(wave), 0.45f),
-                        slice == 0 ? from - 1 : from, y - 1, slice == slices - 1 ? to + 1 : to, y + rect[3] + 1);
-            }
-        }
-        for (int i = 0; i < categories.length; i++) {
-            Category category = categories[i];
-            float[] rect = tabRects[i];
-            boolean selected = category == selectedCategory;
-            boolean hovered = interactive && inside(mouseX, mouseY, rect[0], rect[1], rect[4], rect[3]);
-            float hover = Math.clamp(tabHover.computeIfAbsent(category, ignored -> new SpringAnimation())
-                    .update(hovered && !selected ? 1 : 0, 24, deltaTime), 0, 1);
-            float selection = Math.clamp(categorySelection.computeIfAbsent(category, ignored -> new SpringAnimation(
-                    selected ? 1 : 0)).update(selected ? 1 : 0, 26, 1, deltaTime), 0, 1);
-            if (hover > 0.001f) {
-                int fill = ClickGuiStyle.hover();
-                float width = Math.min(rect[2], tabFit(nameText, category, pad, rect[2]) + hover * 2);
-                renderer.sdf.roundedRect(rect[0], rect[1], width, rect[3], radius,
-                        ARGB.color(Math.round(ARGB.alpha(fill) * hover * 0.6f), fill));
-            }
-            float centerY = rect[1] + rect[3] / 2;
-            float iconX = rect[0] + pad + hover * 2;
-            int color = mix(mix(ClickGuiStyle.muted(), 0xFFFFFFFF, hover), 0xFFFFFFFF, selection);
-            renderer.textures.icon(category.icon(), iconX, centerY - SIDEBAR_ICON / 2, SIDEBAR_ICON, color);
-            nameText.draw(category.title(), iconX + SIDEBAR_ICON + SIDEBAR_GAP,
-                    centerY - nameText.lineHeight(MODULE_FONT_SIZE) / 2, MODULE_FONT_SIZE, color);
-        }
-    }
-
-    private static float tabFit(TextRenderer text, Category category, float pad, float maximum) {
-        return Math.min(maximum, pad * 2 + SIDEBAR_ICON + SIDEBAR_GAP + text.measure(category.title(), MODULE_FONT_SIZE).width());
-    }
-
-    private Category tabAt(float x, float y) {
-        Category[] categories = sidebarCategories();
-        for (int i = 0; i < categories.length; i++) {
-            float[] rect = tabRects[i];
-            if (rect != null && inside(x, y, rect[0], rect[1] - CARD_INSET, rect[4], rect[3] + CARD_INSET * 2)) return categories[i];
-        }
-        return null;
-    }
-
-    private void drawPanel(Renderer2D renderer, Panel panel, float mouseX, float mouseY) {
-        List<Row> rows = rows(panel);
-        float body = visibleBodyHeight(panel, rows);
-        float panelHeight = body;
-        if (panel.amount == 0) {
+    private void drawBody(Renderer2D renderer, Panel panel, List<Row> rows, float body, float mouseX, float mouseY) {
+        if (rows.isEmpty()) {
+            label(renderer, "Empty", panel.x + EDGE, panel.y + ROW_HEIGHT / 2,
+                    MODULE_FONT_SIZE, ClickGuiStyle.muted());
             return;
         }
-
-        float height = body;
+        drawRowStrips(renderer, panel, rows, body);
         float top = panel.y;
-        if (rows.isEmpty()) {
-            renderer.sdf.clippedRoundedRect(panel.x, panel.y, panelWidth(), panelHeight, panelRadius(), ClickGuiStyle.header(),
-                    panel.x - 1, top, panel.x + panelWidth() + 1, top + height + 1);
-            try (var clip = clip(renderer, panel.x, top, panelWidth(), height)) {
-                label(renderer, "Empty", panel.x + CONTENT_INSET,
-                        top + ROW_HEIGHT / 2, ClickGuiStyle.muted());
-            }
-        }
-        drawModuleCards(renderer, panel, rows, top, height, mouseX, mouseY);
-    }
-
-    private float settingCornerGap() {
-        return SETTING_CARD_INSET - CARD_INSET;
-    }
-
-    private float settingsRadius() {
-        return PANEL_RADIUS - 7;
-    }
-
-    private record Block(int start, int end, float x, float y, float height) {
-    }
-
-    private record Placed(Row row, float x, float y) {
-    }
-
-    private List<Block> blocks(float originX, List<Row> rows) {
-        List<Block> blocks = new ArrayList<>();
-        float[] column = {CONTENT_PAD_Y, CONTENT_PAD_Y};
-        int side = 0;
-        int index = 0;
-        while (index < rows.size()) {
-            Row first = rows.get(index);
-            int end = index;
-            float height = 0;
-            while (end < rows.size() && rows.get(end).module() == first.module()) {
-                height += rows.get(end).height();
-                end++;
-            }
-            blocks.add(new Block(index, end, originX + side * (columnWidth() + COLUMN_GAP), column[side], height));
-            column[side] += height;
-            index = end;
-        }
-        return blocks;
-    }
-
-    private List<Placed> placedRows(Panel panel, List<Row> rows) {
-        List<Placed> placed = new ArrayList<>();
-        float top = panel.y - panel.scroll;
-        for (Block block : blocks(panel.x, rows)) {
-            float y = top + block.y();
-            for (int i = block.start(); i < block.end(); i++) {
-                Row row = rows.get(i);
-                placed.add(new Placed(row, block.x(), y));
-                y += row.height();
-            }
-        }
-        return placed;
-    }
-
-    private void drawModuleCards(Renderer2D renderer, Panel panel, List<Row> rows, float panelTop, float panelHeight,
-                                 float mouseX, float mouseY) {
-        float top = panelTop + VIEW_INSET;
-        float height = Math.max(0, panelHeight - VIEW_INSET * 2);
-        try (var clip = clip(renderer, panel.x, top, panelSpan(), height)) {
-            for (Block block : blocks(panel.x, rows)) {
-                float y = panelTop - panel.scroll + block.y();
-                if (y + block.height() <= top || y >= top + height) continue;
-                Module module = rows.get(block.start()).module();
-                ModuleAnimation animation = moduleAnimation(module);
-                float presence = Math.clamp(animation.enabled, 0, 1);
-                int background = mix(mix(ClickGuiStyle.card(), ClickGuiStyle.cardEnabled(), presence * 0.6f), ClickGuiStyle.hover(),
-                        animation.hover * 0.5f);
-                renderer.sdf.roundedRect(block.x() + CARD_INSET, y + CARD_INSET, panelWidth() - CARD_INSET * 2,
-                        Math.max(0, block.height() - CARD_INSET * 2), ClickGuiStyle.CARD_RADIUS, background);
-                float groupY = y;
-                for (int i = block.start(); i < block.end(); i++) {
-                    Row row = rows.get(i);
-                    if (row.setting() != null && !row.spacer() && row.groupOffset() == 0) {
-                        renderer.sdf.roundedRect(block.x() + SETTING_CARD_INSET, groupY,
-                                panelWidth() - SETTING_CARD_INSET * 2, row.groupHeight(),
-                                settingsRadius(), ClickGuiStyle.settings());
-                    }
-                    groupY += row.height();
-                }
+        float bottom = panel.y + body;
+        try (var clip = clip(renderer, panel.x, top, PANEL_WIDTH, body)) {
+            for (Block block : blocks(rows)) {
+                float y = panel.y - panel.scroll + block.y();
+                if (y + block.height() <= top || y >= bottom) continue;
+                drawModeBoxes(renderer, rows, block, panel.x, y);
                 float rowY = y;
                 for (int i = block.start(); i < block.end(); i++) {
                     Row row = rows.get(i);
-                    if (rowY + row.height() > top && rowY < top + height) {
-                        boolean hovered = inside(mouseX, mouseY, block.x(), rowY, panelWidth(), row.height())
-                                && inside(mouseX, mouseY, panel.x, top, panelSpan(), height);
-                        drawRow(renderer, row, block.x(), rowY, hovered, top, top + height, panel);
+                    if (rowY + row.height() > top && rowY < bottom) {
+                        boolean hovered = inside(mouseX, mouseY, panel.x, rowY, PANEL_WIDTH, row.height())
+                                && inside(mouseX, mouseY, panel.x, top, PANEL_WIDTH, body);
+                        drawRow(renderer, row, panel.x, rowY, hovered, top, bottom);
                     }
                     rowY += row.height();
                 }
@@ -783,18 +461,109 @@ public class ClickGuiScreen extends Screen {
         }
     }
 
-    private void drawRow(Renderer2D renderer, Row row, float x, float y, boolean hovered, float viewportTop, float viewportBottom, Panel panel) {
+    private record Block(int start, int end, float y, float height) {
+    }
+
+    private record Placed(Row row, float y) {
+    }
+
+    private List<Block> blocks(List<Row> rows) {
+        List<Block> blocks = new ArrayList<>();
+        float y = 0;
+        int index = 0;
+        while (index < rows.size()) {
+            Module module = rows.get(index).module();
+            int end = index;
+            float height = 0;
+            while (end < rows.size() && rows.get(end).module() == module) {
+                height += rows.get(end).height();
+                end++;
+            }
+            blocks.add(new Block(index, end, y, height));
+            y += height;
+            index = end;
+        }
+        return blocks;
+    }
+
+    private List<Placed> placedRows(Panel panel, List<Row> rows) {
+        List<Placed> placed = new ArrayList<>();
+        float y = panel.y - panel.scroll;
+        for (Row row : rows) {
+            placed.add(new Placed(row, y));
+            y += row.height();
+        }
+        return placed;
+    }
+
+    private void drawRowStrips(Renderer2D renderer, Panel panel, List<Row> rows, float body) {
+        float shapeTop = panel.y - HEADER_HEIGHT;
+        float shapeHeight = HEADER_HEIGHT + body;
+        float left = panel.x;
+        float right = panel.x + PANEL_WIDTH;
+        float viewTop = panel.y;
+        float viewBottom = panel.y + body;
+        for (Block block : blocks(rows)) {
+            float y = panel.y - panel.scroll + block.y();
+            float headerBottom = y + rows.get(block.start()).height();
+            float bottom = y + block.height();
+            if (bottom <= viewTop || y >= viewBottom) continue;
+            float settingsTop = Math.max(headerBottom, viewTop);
+            float settingsBottom = Math.min(bottom, viewBottom);
+            if (settingsBottom > settingsTop) {
+                renderer.sdf.clippedRoundedRect(left, shapeTop, PANEL_WIDTH, shapeHeight, PANEL_RADIUS,
+                        settingsColor(), left, settingsTop, right, settingsBottom);
+            }
+        }
+    }
+
+    private void drawModeBoxes(Renderer2D renderer, List<Row> rows, Block block, float x, float y) {
+        float groupY = y;
+        for (int i = block.start(); i < block.end(); i++) {
+            Row row = rows.get(i);
+            if (row.setting() instanceof ChoiceSetting && !chips(row.setting()) && !row.spacer() && row.groupOffset() == 0) {
+                float boxX = x + MODE_BOX_INSET;
+                float boxWidth = PANEL_WIDTH - MODE_BOX_INSET * 2;
+                float boxTop = groupY + MODE_LABEL * row.amount();
+                float boxHeight = row.groupHeight() - MODE_LABEL * row.amount();
+                renderer.sdf.roundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
+                        ClickGuiStyle.CONTROL);
+                float optionsTop = groupY + row.height();
+                if (row.groupHeight() > row.height() + 0.5f) {
+                    renderer.sdf.clippedRoundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
+                            ClickGuiStyle.CONTROL_DARK, boxX, optionsTop, boxX + boxWidth,
+                            groupY + row.groupHeight());
+                }
+            }
+            groupY += row.height();
+        }
+    }
+
+    private void drawRow(Renderer2D renderer, Row row, float x, float y, boolean hovered, float viewportTop, float viewportBottom) {
+        float active = row.setting() != null ? Math.clamp(settingAnimation(row.setting()).visibility, 0, 1) : 1;
+        drawRowContent(renderer, row, x, y, hovered && active > 0.95f, viewportTop, viewportBottom);
+        if (active >= 0.999f) return;
         float top = Math.max(y, viewportTop);
         float bottom = Math.min(y + row.height(), viewportBottom);
-        if (row.spacer()) {
-            return;
-        }
+        if (bottom <= top) return;
+        float left = x + MODE_BOX_INSET - 2;
+        float width = PANEL_WIDTH - (MODE_BOX_INSET - 2) * 2;
+        int veil = settingsColor();
+        renderer.sdf.clippedRoundedRect(left, y, width, row.height(), 0,
+                ARGB.color(Math.round(255 * (1 - active)), veil), left, top, left + width, bottom);
+    }
+
+    private void drawRowContent(Renderer2D renderer, Row row, float x, float y, boolean hovered,
+                                float viewportTop, float viewportBottom) {
+        if (row.spacer()) return;
+        float top = Math.max(y, viewportTop);
+        float bottom = Math.min(y + row.height(), viewportBottom);
         Setting<?> setting = row.setting();
         ModuleAnimation moduleAnimation = moduleAnimation(row.module());
         SettingAnimation settingAnimation = setting == null ? null : settingAnimation(setting);
         float hover;
         if (setting == null) {
-            moduleAnimation.hover = moduleAnimation.hoverMotion.update(hovered ? 1 : 0, 20, 0.95f, deltaTime);
+            moduleAnimation.hover = moduleAnimation.hoverMotion.update(hovered ? 1 : 0, 20, 1, deltaTime);
             hover = moduleAnimation.hover;
         } else if (row.modeChoice() != null) {
             hover = animate(settingAnimation.modeHover.computeIfAbsent(row.modeChoice(), ignored -> new SpringAnimation()),
@@ -803,152 +572,185 @@ public class ClickGuiScreen extends Screen {
             settingAnimation.hover = animate(settingAnimation.hoverMotion, hovered ? 1 : 0, 18);
             hover = settingAnimation.hover;
         }
-        if (setting == null) {
-        } else {
-            drawSettingBackground(renderer, row, panel, x, y, viewportTop, viewportBottom, hover);
-        }
-        y += row.pad();
-        settingFont = row.pad() > 0 ? PAGE_FONT_SIZE : ClickGuiStyle.SETTING_FONT_SIZE;
 
-        try (var rowClip = clip(renderer, x, top, panelWidth(), bottom - top)) {
+        try (var rowClip = clip(renderer, x, top, PANEL_WIDTH, bottom - top)) {
             if (setting == null) {
                 if (hovered) describedModule = row.module();
                 drawModuleHeader(renderer, row, moduleAnimation, x, y);
-                return;
-            }
-
-            if (row.colorPicker()) {
+            } else if (row.colorPicker()) {
                 drawColorPicker(renderer, (ColorSetting) setting, settingAnimation, x, y);
-                return;
-            }
-
-            if (setting instanceof PlayerPreviewSetting preview) {
-                playerPreviews.computeIfAbsent(preview, ignored -> new EspPlayerPreview())
-                        .draw(renderer, preview.module(), x + 12, y,
-                                panelWidth() - 24);
-                return;
-            }
-
-            if (row.modeChoice() != null) {
+            } else if (row.modeChoice() != null) {
                 boolean selected = ((ChoiceSetting) setting).selectedChoice().equals(row.modeChoice());
-                String option = row.modeChoice();
-                label(renderer, option, x + settingInset(), y + SETTING_ROW_HEIGHT / 2,
-                        settingFont, AccentWave.wave(ClickGuiStyle.text(), selected ? 1 : 0));
-                return;
+                label(renderer, row.modeChoice(), x + EDGE + MODE_TEXT_PAD, y + SETTING_ROW_HEIGHT / 2, SETTING_FONT,
+                        selected ? accentColor() : mix(ClickGuiStyle.LABEL, textColor(), hover));
+            } else if (setting instanceof ActionSetting) {
+                label(renderer, setting.name(), x + EDGE, y + SETTING_ROW_HEIGHT / 2,
+                        SETTING_FONT, AccentWave.text(ClickGuiStyle.text(), hover));
+                label(renderer, "›", x + PANEL_WIDTH - EDGE - 5, y + SETTING_ROW_HEIGHT / 2, FONT_SIZE, AccentWave.text());
+            } else {
+                drawSetting(renderer, setting, settingAnimation, x, y);
             }
-
-            if (setting instanceof ActionSetting) {
-                label(renderer, setting.name(), x + settingInset(), y + SETTING_ROW_HEIGHT / 2,
-                        settingFont, AccentWave.text(ClickGuiStyle.text(), hover));
-                label(renderer, "›", x + panelWidth() - settingInset() - 5, y + SETTING_ROW_HEIGHT / 2,
-                        FONT_SIZE, AccentWave.text());
-                return;
-            }
-
-            drawSetting(renderer, setting, settingAnimation, x, y);
         }
     }
 
-    private void drawModuleName(TextRenderer text, String name, float x, float y, TextRenderer.ColorFunction colors) {
-        text.drawColored(name, x, y, MODULE_FONT_SIZE, colors);
+    private void drawChevron(Renderer2D renderer, float centerX, float centerY, float half, float rise, float thickness,
+                             float open, int color) {
+        double angle = Math.PI * Math.clamp(open, 0, 1);
+        float cos = (float) Math.cos(angle);
+        float sin = (float) Math.sin(angle);
+        float[][] points = {{-half, -rise}, {0, rise}, {half, -rise}};
+        float[][] turned = new float[3][];
+        for (int i = 0; i < 3; i++) {
+            float px = points[i][0];
+            float py = points[i][1];
+            turned[i] = new float[] {centerX + px * cos - py * sin, centerY + px * sin + py * cos};
+        }
+        renderer.sdf.roundLine(turned[0][0], turned[0][1], turned[1][0], turned[1][1], thickness, color);
+        renderer.sdf.roundLine(turned[1][0], turned[1][1], turned[2][0], turned[2][1], thickness, color);
     }
 
-    private void drawModuleHeader(Renderer2D renderer, Row row, ModuleAnimation moduleAnimation, float x, float y) {
-        y += (row.height() - ROW_HEIGHT) / 2;
-        float pad = (ROW_HEIGHT - CARD_INSET * 2 - MODULE_FONT_SIZE * BRAND_CAP_HEIGHT) / 2;
-        float nameX = x + CARD_INSET + pad;
-        float switchX = x + panelWidth() - CARD_INSET - pad - 28.5f;
-        float right = switchX - 12;
-        String key = row.module().bind().displayValue();
+    private float arrowCenter(float rowX) {
+        return rowX + PANEL_WIDTH - EDGE - ARROW_EXTRA_EDGE - ARROW_HALF;
+    }
+
+    private void drawModuleHeader(Renderer2D renderer, Row row, ModuleAnimation animation, float x, float y) {
+        float centerY = y + row.height() / 2;
+        float enabled = Math.clamp(animation.enabled, 0, 1);
+        float hover = Math.clamp(animation.hover, 0, 1);
+        float nameX = x + EDGE;
+        int color = mix(mix(textColor(), ClickGuiStyle.MODULE_HOVER, hover), accentColor(), enabled);
+        drawChevron(renderer, arrowCenter(x), centerY, ARROW_HALF, ARROW_RISE, ARROW_THICKNESS, animation.open,
+                mix(ClickGuiStyle.ARROW, accentColor(), enabled));
+        float right = arrowCenter(x) - ARROW_HALF - KEY_GAP;
         if (row.module().bind().get() != -1) {
-            key = fitLabel(renderer, key.toUpperCase(java.util.Locale.ROOT), 9, 78);
-            float keyWidth = renderer.text.measure(key, 9).width();
-            float boxX = right - keyWidth - 16;
-            float boxY = y + (ROW_HEIGHT - 14) / 2;
-            renderer.text.drawColored(key, boxX + 6, renderer.text.topInBox(boxY, 14, 9), 9, AccentWave.text());
-            right -= keyWidth + 24;
+            String key = fitLabel(renderer, row.module().bind().displayValue(), KEY_FONT, 40);
+            float keyWidth = renderer.text.measure(key, KEY_FONT).width() + KEY_PAD * 2;
+            float keyLeft = right - keyWidth;
+            renderer.sdf.roundedRect(keyLeft, centerY - KEY_HEIGHT / 2, keyWidth, KEY_HEIGHT, 3,
+                    ClickGuiStyle.CONTROL);
+            label(renderer, key, keyLeft + KEY_PAD, centerY, KEY_FONT, ClickGuiStyle.KEY_TEXT);
+            right = keyLeft - KEY_GAP;
         }
-        TextRenderer moduleText = renderer.text;
-        drawModuleName(moduleText, fitLabel(moduleText, row.module().name(), MODULE_FONT_SIZE, right - nameX - 8),
-                nameX, y + ROW_HEIGHT / 2 - moduleText.lineHeight(MODULE_FONT_SIZE) / 2,
-                AccentWave.wave(ClickGuiStyle.text(), Math.clamp(moduleAnimation.enabled, 0, 1)));
-
-        drawToggleControl(renderer, switchX, y + ROW_HEIGHT / 2, moduleAnimation.enabled);
-    }
-
-    private void drawSettingBackground(Renderer2D renderer, Row row, Panel panel, float x, float y,
-                                       float viewportTop, float viewportBottom, float hover) {
-        float top = Math.max(y, viewportTop);
-        float bottom = Math.min(y + row.height(), viewportBottom);
-        if (hover <= 0.001f) return;
-        int background = mix(ClickGuiStyle.settings(), ClickGuiStyle.hover(), hover);
-        float inset = SETTING_CARD_INSET;
-        float radius = settingsRadius();
-        float groupTop = y - row.groupOffset();
-        renderer.sdf.clippedRoundedRect(x + inset, groupTop, panelWidth() - inset * 2,
-                row.groupHeight(), radius, background,
-                x + inset - 1, top, x + panelWidth() - inset + 1, bottom);
+        String name = fitLabel(renderer.text, row.module().name(), MODULE_FONT_SIZE, right - nameX - 4);
+        renderer.text.draw(name, nameX, centerY - renderer.text.lineHeight(MODULE_FONT_SIZE) / 2, MODULE_FONT_SIZE, color);
     }
 
     private String getSettingValue(Setting<?> setting) {
-        if (setting == binding) {
-            return "Press input...";
-        }
-        if (setting instanceof BooleanSetting || setting instanceof ColorSetting) {
-            return "";
-        }
-        if (setting instanceof IntSetting slider) {
-            return slider.displayValue(settingAnimation(setting).fraction);
-        }
+        if (setting == binding) return "Press input...";
+        if (setting instanceof BooleanSetting || setting instanceof ColorSetting) return "";
+        if (setting instanceof IntSetting slider) return slider.displayValue(settingAnimation(setting).fraction);
         return setting.displayValue();
     }
 
-    private void drawSetting(Renderer2D renderer, Setting<?> setting, SettingAnimation settingAnimation,
-                             float x, float y) {
-        String value = fitLabel(renderer, getSettingValue(setting), settingFont,
-                (panelWidth() - settingInset() * 2) * 0.48f);
-        float valueWidth = renderer.text.measure(value, settingFont).width();
-        float dropdownInset = setting instanceof ChoiceSetting ? 12 : 0;
-        boolean editing = setting == editingSlider;
-        float typedWidth = editing ? renderer.text.measure(sliderInput.getValue() + editingSlider.typedSuffix(),
-                settingFont).width() : 0;
-        float reserved = setting instanceof BooleanSetting ? 36
-                : editing ? typedWidth + 4 : valueWidth + 4 + dropdownInset;
-        if (setting instanceof ColorSetting) {
-            reserved += 19;
+    private void drawSwitch(Renderer2D renderer, float right, float centerY, float amount) {
+        float left = right - SWITCH_WIDTH;
+        float on = Math.clamp(amount, 0, 1);
+        int track = mix(ClickGuiStyle.TRACK, ARGB.opaque(ThemeColors.primary()), on);
+        renderer.sdf.roundedRect(left, centerY - SWITCH_HEIGHT / 2, SWITCH_WIDTH, SWITCH_HEIGHT, SWITCH_HEIGHT / 2, track);
+        float travel = SWITCH_WIDTH - SWITCH_HEIGHT;
+        float knobX = left + SWITCH_HEIGHT / 2 + travel * Math.clamp(amount, -0.1f, 1.1f);
+        renderer.sdf.circle(knobX, centerY, SWITCH_HEIGHT / 2 - 1.5f,
+                mix(ClickGuiStyle.LABEL, ClickGuiStyle.TITLE, on));
+    }
+
+    private boolean chips(Setting<?> setting) {
+        if (!(setting instanceof BindModeSetting choice)) return false;
+        float width = chipWidth(choice);
+        for (String option : choice.choices()) {
+            if (measureText.measure(option, CHIP_FONT).width() + CHIP_PAD * 2 > width) return false;
         }
-        float nameWidth = Math.max(0, panelWidth() - settingInset() * 2 - reserved);
-        label(renderer, fitLabel(renderer, setting.name(), settingFont, nameWidth),
-                x + settingInset(), y + SETTING_ROW_HEIGHT / 2 + SETTING_TEXT_OFFSET,
-                settingFont, ClickGuiStyle.text());
-        if (setting instanceof ColorSetting color) {
-            renderer.sdf.roundedRect(x + panelWidth() - settingInset() - 14, y + SETTING_ROW_HEIGHT / 2 - 6, 14, 12, 3,
-                    color.get());
-        } else if (setting instanceof BooleanSetting) {
-            drawToggle(renderer, x, y, settingAnimation.enabled);
-        } else if (editing) {
-            drawSliderInput(renderer, x + panelWidth() - settingInset(), y + SETTING_ROW_HEIGHT / 2 + SETTING_TEXT_OFFSET);
-        } else {
-            settingAnimation.valueLeft = x + panelWidth() - settingInset() - valueWidth - dropdownInset;
-            label(renderer, value, settingAnimation.valueLeft,
-                    y + SETTING_ROW_HEIGHT / 2 + SETTING_TEXT_OFFSET,
-                    settingFont, AccentWave.text(ClickGuiStyle.text(),
-                            setting instanceof BindSetting || setting instanceof ChoiceSetting ? 0 : settingAnimation.pulse));
+        return true;
+    }
+
+    private float chipWidth(ChoiceSetting choice) {
+        int count = Math.max(1, choice.choices().size());
+        return (PANEL_WIDTH - EDGE * 2 - CHIP_GAP * (count - 1)) / count;
+    }
+
+    private float chipLeft(ChoiceSetting choice, float rowX, int index) {
+        return rowX + EDGE + index * (chipWidth(choice) + CHIP_GAP);
+    }
+
+    private void drawChips(Renderer2D renderer, ChoiceSetting choice, float x, float centerY) {
+        List<String> options = choice.choices();
+        float width = chipWidth(choice);
+        float top = centerY - CHIP_HEIGHT / 2;
+        int selectedIndex = Math.max(0, options.indexOf(choice.selectedChoice()));
+        SpringAnimation motion = settingAnimation((Setting<?>) choice).chipMotion;
+        if (motion.value() < 0) motion.reset(selectedIndex);
+        float position = motion.update(selectedIndex, 26, 1, deltaTime);
+        for (int i = 0; i < options.size(); i++) {
+            renderer.sdf.roundedRect(chipLeft(choice, x, i), top, width, CHIP_HEIGHT, CHIP_RADIUS,
+                    ClickGuiStyle.CONTROL);
         }
+        float highlightX = x + EDGE + Math.clamp(position, 0, options.size() - 1) * (width + CHIP_GAP);
+        renderer.sdf.roundedRect(highlightX, top, width, CHIP_HEIGHT, CHIP_RADIUS, ARGB.opaque(ThemeColors.primary()));
+        for (int i = 0; i < options.size(); i++) {
+            String option = options.get(i);
+            float active = Math.clamp(1 - Math.abs(position - i), 0, 1);
+            float textWidth = renderer.text.measure(option, CHIP_FONT).width();
+            label(renderer, option, chipLeft(choice, x, i) + (width - textWidth) / 2, centerY, CHIP_FONT,
+                    mix(ClickGuiStyle.LABEL, textColor(), active));
+        }
+    }
+
+    private void drawSetting(Renderer2D renderer, Setting<?> setting, SettingAnimation animation, float x, float y) {
+        float centerY = y + SETTING_ROW_HEIGHT / 2;
+        if (chips(setting)) {
+            drawChips(renderer, (ChoiceSetting) setting, x, centerY);
+            return;
+        }
+        float left = x + EDGE;
+        float right = x + PANEL_WIDTH - EDGE;
+        int text = textColor();
+        int primary = ARGB.opaque(ThemeColors.primary());
         if (setting instanceof ChoiceSetting) {
-            drawExpandIcon(renderer, x + panelWidth() - settingInset() - 3,
-                    y + SETTING_ROW_HEIGHT / 2, expandedModes.contains(setting), ClickGuiStyle.text());
+            label(renderer, fitLabel(renderer, setting.name(), SETTING_FONT, right - left), left, y + MODE_LABEL / 2,
+                    SETTING_FONT, ClickGuiStyle.LABEL);
+            float boxCenter = y + MODE_LABEL + SETTING_ROW_HEIGHT / 2;
+            label(renderer, fitLabel(renderer, getSettingValue(setting), SETTING_FONT,
+                    right - left - MODE_TEXT_PAD * 2 - MODE_ARROW_SPACE), left + MODE_TEXT_PAD, boxCenter, SETTING_FONT, text);
+            drawChevron(renderer, right - MODE_TEXT_PAD - 3.5f, boxCenter, 3.5f, 1.9f, 1.3f, animation.dropdown, text);
+            return;
+        }
+        boolean editing = setting == editingSlider;
+        String value = setting instanceof BooleanSetting || setting instanceof ColorSetting ? ""
+                : fitLabel(renderer, getSettingValue(setting), SETTING_FONT, (right - left) * 0.5f);
+        float valueWidth = renderer.text.measure(value, SETTING_FONT).width();
+        float reserved = setting instanceof BooleanSetting ? SWITCH_WIDTH + 6
+                : setting instanceof ColorSetting ? 14
+                : editing ? renderer.text.measure(sliderInput.getValue() + editingSlider.typedSuffix(), SETTING_FONT).width() + 6
+                : valueWidth + 6;
+        float lit = setting instanceof BooleanSetting ? Math.clamp(animation.enabled, 0, 1) : 0;
+        label(renderer, fitLabel(renderer, setting.name(), SETTING_FONT, right - left - reserved), left, centerY, SETTING_FONT,
+                mix(ClickGuiStyle.LABEL, textColor(), lit));
+        if (setting instanceof BooleanSetting) {
+            drawSwitch(renderer, right, centerY, animation.enabled);
+        } else if (setting instanceof ColorSetting color) {
+            renderer.sdf.circle(right - 4, centerY, 4, ARGB.opaque(color.get()));
+        } else if (editing) {
+            drawSliderInput(renderer, right, centerY);
+        } else {
+            animation.valueLeft = right - valueWidth;
+            label(renderer, value, animation.valueLeft, centerY, SETTING_FONT,
+                    setting instanceof BindSetting ? ClickGuiStyle.muted() : accentColor());
         }
         if (setting instanceof SliderSetting) {
-            drawSlider(renderer, x, y, settingAnimation);
+            float width = right - left;
+            float trackY = y + SLIDER_TRACK_Y;
+            float fill = width * Math.clamp(animation.fraction, 0, 1);
+            float half = SLIDER_TRACK / 2;
+            renderer.sdf.roundedRect(left, trackY - half, width, SLIDER_TRACK, half, ClickGuiStyle.TRACK);
+            if (fill > 0) renderer.sdf.roundedRect(left, trackY - half, fill, SLIDER_TRACK, half, primary);
+            renderer.sdf.circle(Math.clamp(left + fill, left + SLIDER_KNOB, right - SLIDER_KNOB), trackY, SLIDER_KNOB, text);
         }
     }
 
     private void drawSliderInput(Renderer2D renderer, float right, float centerY) {
         String typed = sliderInput.getValue();
         String suffix = editingSlider.typedSuffix();
-        float numberRight = right - renderer.text.measure(suffix, settingFont).width();
-        float left = numberRight - renderer.text.measure(typed, settingFont).width();
+        float numberRight = right - renderer.text.measure(suffix, SETTING_FONT).width();
+        float left = numberRight - renderer.text.measure(typed, SETTING_FONT).width();
         sliderInputLeft = left;
         sliderInputRight = right;
         sliderInputCenterY = centerY;
@@ -956,7 +758,7 @@ public class ClickGuiScreen extends Screen {
             int closest = 0;
             float nearest = Float.MAX_VALUE;
             for (int index = 0; index <= typed.length(); index++) {
-                float stop = left + renderer.text.measure(typed.substring(0, index), settingFont).width();
+                float stop = left + renderer.text.measure(typed.substring(0, index), SETTING_FONT).width();
                 if (Math.abs(stop - sliderClickX) < nearest) {
                     nearest = Math.abs(stop - sliderClickX);
                     closest = index;
@@ -967,70 +769,36 @@ public class ClickGuiScreen extends Screen {
             sliderClickX = Float.NaN;
         }
         int cursor = sliderInput.getCursorPosition();
-        float caret = left + renderer.text.measure(typed.substring(0, cursor), settingFont).width();
+        float caret = left + renderer.text.measure(typed.substring(0, cursor), SETTING_FONT).width();
         String selected = sliderInput.getHighlighted();
         if (!selected.isEmpty()) {
             int end = cursor + selected.length();
             if (end > typed.length() || !typed.substring(cursor, end).equals(selected)) end = cursor - selected.length();
-            float other = left + renderer.text.measure(typed.substring(0, end), settingFont).width();
+            float other = left + renderer.text.measure(typed.substring(0, end), SETTING_FONT).width();
             renderer.sdf.roundedRect(Math.min(caret, other), centerY - 8, Math.abs(other - caret), 16, 3,
                     ARGB.color(0x50, accent.getAsInt()));
         }
-        label(renderer, typed, left, centerY, settingFont, ClickGuiStyle.text());
-        label(renderer, suffix, numberRight, centerY, settingFont, ClickGuiStyle.text());
+        label(renderer, typed, left, centerY, SETTING_FONT, textColor());
+        label(renderer, suffix, numberRight, centerY, SETTING_FONT, textColor());
         float idle = (System.nanoTime() - sliderEditedAt) * 1e-9f;
         if (idle < 0.5f || idle % 1 < 0.5f) {
             renderer.sdf.roundedRect(caret, centerY - 7, 1, 14, 0.5f, accent.getAsInt());
         }
     }
 
-    private void drawToggle(Renderer2D renderer, float x, float y, float amount) {
-        float switchX = x + panelWidth() - settingInset() - 28;
-        float switchY = y + SETTING_ROW_HEIGHT / 2 + SETTING_TEXT_OFFSET;
-        drawToggleControl(renderer, switchX, switchY, amount);
-    }
-
-    private void drawToggleControl(Renderer2D renderer, float switchX, float switchY, float amount) {
-        float position = Math.clamp(amount, -0.12f, 1.12f);
-        amount = Math.clamp(amount, 0, 1);
-        float left = switchX + 4;
-        float knobX = switchX + 9.5f + 13 * position;
-        renderer.sdf.roundedRect(left, switchY - 3.5f, 24, 7, 3.5f, ClickGuiStyle.track());
-        float fill = Math.clamp(knobX - left, 0, 24);
-        if (fill > 0) renderer.sdf.roundedRect(left, switchY - 3.5f, fill, 7, 3.5f, accent.getAsInt());
-        renderer.sdf.circle(knobX, switchY, 6, mix(ClickGuiStyle.muted(), ClickGuiStyle.text(), amount));
-    }
-
-    private void drawSlider(Renderer2D renderer, float x, float y, SettingAnimation animation) {
-        float left = x + sliderInset();
-        float width = panelWidth() - sliderInset() * 2;
-        float centerY = y + SLIDER_TRACK_Y;
-        float progress = width * Math.clamp(animation.fraction, 0, 1);
-        float interaction = Math.clamp(animation.sliderInteraction, 0, 1.1f);
-        float trackHeight = SLIDER_TRACK_HEIGHT + interaction;
-        float radius = trackHeight / 2;
-        renderer.sdf.roundedRect(left, centerY - radius, width, trackHeight, radius,
-                mix(ClickGuiStyle.track(), ClickGuiStyle.disabled(), interaction * 0.3f));
-        if (progress > 0) {
-            renderer.roundedGradient(left, centerY - radius, progress, trackHeight, radius,
-                    accent.getAsInt(), mix(ThemeColors.secondary(), ClickGuiStyle.text(), interaction * 0.18f));
-        }
-        float thumbRadius = SLIDER_KNOB_RADIUS + interaction * 1.35f;
-        renderer.sdf.circle(left + progress, centerY, thumbRadius, ClickGuiStyle.text());
-    }
-
     private void drawColorPicker(Renderer2D renderer, ColorSetting color, SettingAnimation animation, float x, float y) {
-        float left = x + settingInset();
+        float left = x + EDGE;
         float top = y + 4;
+        float width = colorFieldWidth();
         int hue = ColorSetting.rgb(color.hue(), 1, 1);
-        renderer.colorField(left, top, colorFieldWidth(), COLOR_FIELD_HEIGHT, PICKER_RADIUS, hue);
+        renderer.colorField(left, top, width, COLOR_FIELD_HEIGHT, PICKER_RADIUS, hue);
         float hueTop = top + COLOR_FIELD_HEIGHT + HUE_GAP;
-        renderer.hueBar(left, hueTop, colorFieldWidth(), HUE_HEIGHT);
-        float cursorX = Math.clamp(left + animation.saturation * colorFieldWidth(), left + 5, left + colorFieldWidth() - 5);
+        renderer.hueBar(left, hueTop, width, HUE_HEIGHT);
+        float cursorX = Math.clamp(left + animation.saturation * width, left + 5, left + width - 5);
         float cursorY = Math.clamp(top + (1 - animation.brightness) * COLOR_FIELD_HEIGHT, top + 5, top + COLOR_FIELD_HEIGHT - 5);
         renderer.sdf.circle(cursorX, cursorY, 4, ClickGuiStyle.header());
         renderer.sdf.circle(cursorX, cursorY, 3, ClickGuiStyle.text());
-        float hueX = left + animation.hue * colorFieldWidth();
+        float hueX = left + animation.hue * width;
         renderer.sdf.circle(hueX, hueTop + HUE_HEIGHT / 2, 5, ClickGuiStyle.header());
         renderer.sdf.circle(hueX, hueTop + HUE_HEIGHT / 2, 4, ClickGuiStyle.text());
     }
@@ -1038,56 +806,50 @@ public class ClickGuiScreen extends Screen {
     private void updateColor(float x, float y) {
         for (Placed placed : placedRows(colorPanel, rows(colorPanel))) {
             Row row = placed.row();
-            float rowY = placed.y();
             if (row.setting() == draggedColor && row.colorPicker()) {
-                colorX = placed.x();
-                float vertical = Math.clamp((y - rowY - 4) / COLOR_FIELD_HEIGHT, 0, 1);
+                float position = Math.clamp((x - colorPanel.x - EDGE) / colorFieldWidth(), 0, 1);
                 if (draggingHue) {
-                    float hue = Math.clamp((x - colorX - settingInset()) / colorFieldWidth(), 0, 1);
-                    draggedColor.select(hue, draggedColor.saturation(), draggedColor.brightness());
+                    draggedColor.select(position, draggedColor.saturation(), draggedColor.brightness());
                 } else {
-                    float saturation = Math.clamp((x - colorX - settingInset()) / colorFieldWidth(), 0, 1);
-                    draggedColor.select(draggedColor.hue(), saturation, 1 - vertical);
+                    float vertical = Math.clamp((y - placed.y() - 4) / COLOR_FIELD_HEIGHT, 0, 1);
+                    draggedColor.select(draggedColor.hue(), position, 1 - vertical);
                 }
                 return;
             }
         }
     }
 
+    private boolean belongs(Panel panel, Module module) {
+        if (panel.category == Category.CONFIG) return false;
+        if (panel.category == Category.HUD) return inHudEditor(module);
+        return !inHudEditor(module) && module.category() == panel.category;
+    }
+
     private List<Row> rows(Panel panel) {
         List<Row> rows = new ArrayList<>();
         for (Module module : manager.modules()) {
-            if (module instanceof DynamicIslandModule
-                    || (hudOnly ? !inHudEditor(module)
-                    : inHudEditor(module) || module.category() != panel.category)) {
-                continue;
-            }
-            rows.add(new Row(module, null, 1));
+            if (module instanceof DynamicIslandModule || !belongs(panel, module)) continue;
+            rows.add(Row.module(module, ROW_HEIGHT));
             float amount = moduleAnimation(module).open;
-            if (amount > 0) {
-                List<Row> settingsRows = settingsRows(module);
-                float settingsHeight = 0;
-                for (Row row : settingsRows) {
-                    settingsHeight += row.height();
+            if (amount <= 0) continue;
+            List<Row> settingsRows = settingsRows(module);
+            float settingsHeight = 0;
+            for (Row row : settingsRows) settingsHeight += row.height();
+            float padding = SETTINGS_SPACING * 2;
+            float visibleHeight = (settingsHeight + padding) * amount;
+            float spacingAmount = Math.min(1, visibleHeight / padding);
+            rows.add(Row.spacing(module, spacingAmount));
+            float remaining = Math.max(0, visibleHeight - padding);
+            for (Row row : settingsRows) {
+                float rowHeight = row.height();
+                float reveal = Math.clamp(remaining / rowHeight, 0, 1);
+                if (reveal > 0) {
+                    float groupHeight = Math.min(row.groupHeight(), remaining + row.groupOffset());
+                    rows.add(row.copy(row.amount() * reveal, row.groupOffset(), groupHeight));
                 }
-                float bottomPadding = settingCornerGap() + CARD_INSET;
-                float padding = SETTINGS_SPACING + bottomPadding;
-                float visibleHeight = (settingsHeight + padding) * amount;
-                float spacingAmount = Math.min(1, visibleHeight / padding);
-                rows.add(Row.spacing(module, spacingAmount));
-                float remaining = Math.max(0, visibleHeight - padding);
-                for (Row row : settingsRows) {
-                    float rowHeight = row.height();
-                    float reveal = Math.clamp(remaining / rowHeight, 0, 1);
-                    if (reveal > 0) {
-                        float groupHeight = Math.min(row.groupHeight(), remaining + row.groupOffset());
-                        rows.add(new Row(module, row.setting(), row.amount() * reveal, row.groupOffset(),
-                                groupHeight, row.spacer(), row.modeChoice(), row.colorPicker()));
-                    }
-                    remaining -= rowHeight;
-                }
-                rows.add(Row.spacing(module, (bottomPadding * spacingAmount + Math.max(0, remaining)) / SETTINGS_SPACING));
+                remaining -= rowHeight;
             }
+            rows.add(Row.spacing(module, spacingAmount + Math.max(0, remaining) / SETTINGS_SPACING));
         }
         return rows;
     }
@@ -1097,31 +859,25 @@ public class ClickGuiScreen extends Screen {
         List<Row> group = new ArrayList<>();
         for (Setting<?> setting : module.settings()) {
             float visibility = settingAnimation(setting).visibility;
-            if (visibility == 0) {
-                continue;
-            }
+            if (visibility == 0) continue;
             if (setting instanceof ColorSetting color) {
                 appendSettingsGroup(rows, group, module);
                 group.clear();
                 group.add(new Row(module, setting, visibility));
                 float reveal = settingAnimation(color).dropdown * visibility;
-                if (reveal > 0) {
-                    group.add(new Row(module, setting, reveal, 0, 0, false, null, true));
-                }
+                if (reveal > 0) group.add(new Row(module, setting, reveal, 0, 0, false, null, true));
                 appendSettingsGroup(rows, group, module);
                 group.clear();
+            } else if (chips(setting)) {
+                group.add(new Row(module, setting, visibility));
             } else if (setting instanceof ChoiceSetting mode) {
                 appendSettingsGroup(rows, group, module);
                 group.clear();
-                group.add(new Row(module, setting, visibility));
-                List<String> choices = new ArrayList<>(mode.choices());
-                choices.remove(mode.selectedChoice());
-                float remaining = choices.size() * SETTING_ROW_HEIGHT * settingAnimation(setting).dropdown * visibility;
-                for (String choice : choices) {
+                group.add(new Row(module, setting, visibility).sized(MODE_LABEL + SETTING_ROW_HEIGHT));
+                float remaining = mode.choices().size() * SETTING_ROW_HEIGHT * settingAnimation(setting).dropdown * visibility;
+                for (String choice : mode.choices()) {
                     float reveal = Math.clamp(remaining / SETTING_ROW_HEIGHT, 0, 1);
-                    if (reveal > 0) {
-                        group.add(new Row(module, setting, reveal, 0, 0, false, choice, false));
-                    }
+                    if (reveal > 0) group.add(new Row(module, setting, reveal, 0, 0, false, choice, false));
                     remaining -= SETTING_ROW_HEIGHT;
                 }
                 appendSettingsGroup(rows, group, module);
@@ -1135,38 +891,31 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void appendSettingsGroup(List<Row> rows, List<Row> group, Module module) {
-        if (group.isEmpty()) {
-            return;
-        }
+        if (group.isEmpty()) return;
         if (!rows.isEmpty()) {
             float visibility = 0;
-            for (Row row : group) {
-                visibility = Math.max(visibility, row.amount());
-            }
+            for (Row row : group) visibility = Math.max(visibility, row.amount());
             rows.add(Row.spacing(module, visibility));
         }
         float height = 0;
-        for (Row row : group) {
-            height += row.height();
-        }
+        for (Row row : group) height += row.height();
         float offset = 0;
         for (Row row : group) {
-            rows.add(new Row(module, row.setting(), row.amount(), offset, height, false, row.modeChoice(), row.colorPicker()));
+            rows.add(row.copy(row.amount(), offset, height));
             offset += row.height();
         }
     }
 
     private float contentHeight(List<Row> rows) {
         float height = 0;
-        for (Block block : blocks(0, rows)) {
-            height = Math.max(height, block.y() + block.height() + CONTENT_PAD_Y);
-        }
-
+        for (Row row : rows) height += row.height();
         return Math.max(ROW_HEIGHT, height);
     }
 
     private float bodyHeight(Panel panel, List<Row> rows) {
-        return panelBodyHeight();
+        float limit = Math.max(ROW_HEIGHT * 2, Math.min(maxBodyHeight(), screenHeight() - SCREEN_MARGIN - panel.y));
+        float content = panel.category == Category.CONFIG ? configPanel.contentHeight() : contentHeight(rows);
+        return Math.min(content, limit);
     }
 
     private float visibleBodyHeight(Panel panel, List<Row> rows) {
@@ -1174,24 +923,22 @@ public class ClickGuiScreen extends Screen {
     }
 
     private float maxScroll(Panel panel, List<Row> rows) {
-        return Math.max(0, contentHeight(rows) - Math.max(0, bodyHeight(panel, rows)));
+        return Math.max(0, contentHeight(rows) - bodyHeight(panel, rows));
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (closing) return true;
+        float x = guiMouseX(event.x());
+        float y = guiMouseY(event.y());
         if (editingSlider != null) {
-            float clickX = guiMouseX(event.x());
-            if (inside(clickX, guiMouseY(event.y()), sliderInputLeft - 4, sliderInputCenterY - 10,
-                    sliderInputRight - sliderInputLeft + 8, 20)) {
-                sliderClickX = clickX;
+            if (inside(x, y, sliderInputLeft - 4, sliderInputCenterY - 10, sliderInputRight - sliderInputLeft + 8, 20)) {
+                sliderClickX = x;
                 sliderEditedAt = System.nanoTime();
                 return true;
             }
             stopEditingSlider(true);
         }
-        float x = guiMouseX(event.x());
-        float y = guiMouseY(event.y());
         if (binding != null) {
             binding.bindMouse(event.button());
             binding = null;
@@ -1202,33 +949,16 @@ public class ClickGuiScreen extends Screen {
             describing = true;
             return true;
         }
-        if (!hudOnly && button == InputConstants.MOUSE_BUTTON_LEFT) {
-            configPanel.unfocus();
-        }
-        if (button == InputConstants.MOUSE_BUTTON_LEFT
-                && inside(x, y, windowX, windowY, sidebarWidth(), WINDOW_HEIGHT)) {
-            Category tab = standalone() ? null : tabAt(x, y);
-            if (tab != null) {
-                selectCategory(tab);
-                return true;
-            }
-            draggingWindow = true;
-            dragX = x - windowX;
-            dragY = y - windowY;
-            return true;
-        }
-        if (selectedCategory == Category.CONFIG) return configPanel.mouseClicked(x, y, button);
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) configPanel.unfocus();
         for (int i = panels.size() - 1; i >= 0; i--) {
             Panel panel = panels.get(i);
             List<Row> rows = rows(panel);
             float height = visibleBodyHeight(panel, rows);
-            if (!inside(x, y, panel.x, panel.y + VIEW_INSET, panelSpan(), height - VIEW_INSET * 2)) {
-                continue;
-            }
+            if (!inside(x, y, panel.x, panel.y - HEADER_HEIGHT, PANEL_WIDTH, HEADER_HEIGHT + height)) continue;
             panels.remove(i);
             panels.add(panel);
             if (y < panel.y) {
-                if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
+                if (button == InputConstants.MOUSE_BUTTON_LEFT && Math.abs(x - arrowCenter(panel.x)) <= ARROW_HALF + 4) {
                     panel.open = !panel.open;
                 } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     draggedPanel = panel;
@@ -1237,74 +967,16 @@ public class ClickGuiScreen extends Screen {
                 }
                 return true;
             }
-            if (!panel.open || y < panel.y
-                    || y >= panel.y + height) {
+            if (!panel.open) return true;
+            if (panel.category == Category.CONFIG) {
+                configPanel.mouseClicked(x, y, button);
                 return true;
             }
             for (Placed placed : placedRows(panel, rows)) {
                 Row row = placed.row();
-                float rowX = placed.x();
                 float rowY = placed.y();
-                if (x >= rowX && x < rowX + panelWidth() && y >= rowY && y < rowY + row.height()) {
-                    if (row.spacer()) {
-                        return true;
-                    }
-                    if (row.setting() == null) {
-                        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-                            row.module().toggle();
-                        } else if (button == InputConstants.MOUSE_BUTTON_RIGHT && !row.module().settings().isEmpty()) {
-                            if (!expanded.remove(row.module())) expanded.add(row.module());
-                        }
-                    } else if (button == InputConstants.MOUSE_BUTTON_LEFT && expanded.contains(row.module())
-                            && row.setting().isVisible() && settingAnimation(row.setting()).visibility > 0.95f
-                            && moduleAnimation(row.module()).open > 0.95f) {
-                        if (row.setting() instanceof PlayerPreviewSetting preview) {
-                            draggedPreview = preview;
-                        } else if (row.setting() instanceof ColorSetting color) {
-                            if (row.colorPicker()) {
-                                if (settingAnimation(color).dropdown < 0.95f || !expandedColors.contains(color)) {
-                                    return true;
-                                }
-                                float fieldX = rowX + settingInset();
-                                if (inside(x, y, fieldX, rowY + 4, colorFieldWidth(), COLOR_FIELD_HEIGHT)
-                                        || inside(x, y, fieldX, rowY + 4 + COLOR_FIELD_HEIGHT + HUE_GAP, colorFieldWidth(), HUE_HEIGHT)) {
-                                    draggedColor = color;
-                                    colorPanel = panel;
-                                    colorX = rowX;
-                                    draggingHue = y >= rowY + 4 + COLOR_FIELD_HEIGHT + HUE_GAP;
-                                    updateColor(x, y);
-                                }
-                            } else if (!expandedColors.remove(color)) {
-                                expandedColors.add(color);
-                            }
-                        } else if (row.setting() instanceof ChoiceSetting mode) {
-                            if (row.modeChoice() != null) {
-                                if (settingAnimation(row.setting()).dropdown < 0.95f || !expandedModes.contains(row.setting())) {
-                                    return true;
-                                }
-                                mode.selectChoice(row.modeChoice());
-                                expandedModes.remove(row.setting());
-                            } else if (!expandedModes.remove(row.setting())) {
-                                expandedModes.add(row.setting());
-                            }
-                        } else if (row.setting() instanceof BindSetting bind) {
-                            binding = bind;
-                            capturedBindKey = -1;
-                            if (configPanel != null) configPanel.unfocus();
-                        } else if (row.setting() instanceof IntSetting slider && y < rowY + row.pad() + SETTING_ROW_HEIGHT
-                                && x >= settingAnimation(slider).valueLeft - 4) {
-                            startEditingSlider(slider, x);
-                        } else if (row.setting() instanceof SliderSetting slider) {
-                            draggedSlider = slider;
-                            sliderPanel = panel;
-                            sliderX = rowX;
-                            updateSlider(x);
-                        } else {
-                            row.setting().cycle();
-                            settingAnimation(row.setting()).pulse = 1;
-                            settingAnimation(row.setting()).pulseMotion.reset(1);
-                        }
-                    }
+                if (y >= rowY && y < rowY + row.height()) {
+                    clickRow(row, panel, rowY, x, y, button);
                     return true;
                 }
             }
@@ -1313,8 +985,71 @@ public class ClickGuiScreen extends Screen {
         return false;
     }
 
+    private void clickRow(Row row, Panel panel, float rowY, float x, float y, int button) {
+        if (row.spacer()) return;
+        Module module = row.module();
+        if (row.setting() == null) {
+            boolean onArrow = !module.settings().isEmpty() && Math.abs(x - arrowCenter(panel.x)) <= ARROW_HALF + 4;
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && !onArrow) {
+                module.toggle();
+            } else if (!module.settings().isEmpty()
+                    && (button == InputConstants.MOUSE_BUTTON_RIGHT || button == InputConstants.MOUSE_BUTTON_LEFT)) {
+                if (!expanded.remove(module)) expanded.add(module);
+            }
+            return;
+        }
+        Setting<?> setting = row.setting();
+        if (button != InputConstants.MOUSE_BUTTON_LEFT || !expanded.contains(module) || !setting.isVisible()
+                || settingAnimation(setting).visibility <= 0.95f || moduleAnimation(module).open <= 0.95f) {
+            return;
+        }
+        if (setting instanceof ColorSetting color) {
+            if (!row.colorPicker()) {
+                if (!expandedColors.remove(color)) expandedColors.add(color);
+                return;
+            }
+            if (settingAnimation(color).dropdown < 0.95f || !expandedColors.contains(color)) return;
+            float fieldX = panel.x + EDGE;
+            float hueTop = rowY + 4 + COLOR_FIELD_HEIGHT + HUE_GAP;
+            if (inside(x, y, fieldX, rowY + 4, colorFieldWidth(), COLOR_FIELD_HEIGHT)
+                    || inside(x, y, fieldX, hueTop, colorFieldWidth(), HUE_HEIGHT)) {
+                draggedColor = color;
+                colorPanel = panel;
+                draggingHue = y >= hueTop;
+                updateColor(x, y);
+            }
+        } else if (setting instanceof ChoiceSetting mode && chips(setting)) {
+            for (int chip = 0; chip < mode.choices().size(); chip++) {
+                float chipX = chipLeft(mode, panel.x, chip);
+                if (x >= chipX && x < chipX + chipWidth(mode)) mode.selectChoice(mode.choices().get(chip));
+            }
+        } else if (setting instanceof ChoiceSetting mode) {
+            if (row.modeChoice() == null) {
+                if (!expandedModes.remove(setting)) expandedModes.add(setting);
+            } else if (settingAnimation(setting).dropdown >= 0.95f && expandedModes.contains(setting)) {
+                mode.selectChoice(row.modeChoice());
+                expandedModes.remove(setting);
+            }
+        } else if (setting instanceof BindSetting bind) {
+            binding = bind;
+            capturedBindKey = -1;
+            configPanel.unfocus();
+        } else if (setting instanceof IntSetting slider && y < rowY + SETTING_ROW_HEIGHT
+                && x >= settingAnimation(slider).valueLeft - 4) {
+            startEditingSlider(slider, x);
+        } else if (setting instanceof SliderSetting slider) {
+            draggedSlider = slider;
+            sliderX = panel.x;
+            updateSlider(x);
+        } else {
+            setting.cycle();
+            settingAnimation(setting).pulse = 1;
+            settingAnimation(setting).pulseMotion.reset(1);
+        }
+    }
+
     private void startEditingSlider(IntSetting slider, float clickX) {
-        if (configPanel != null) configPanel.unfocus();
+        configPanel.unfocus();
         editingSlider = slider;
         sliderInput.setFocused(true);
         sliderInput.setValue(slider.typedValue());
@@ -1337,7 +1072,7 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void updateSlider(float x) {
-        float target = Math.clamp((x - sliderX - sliderInset()) / (panelWidth() - sliderInset() * 2), 0, 1);
+        float target = Math.clamp((x - sliderX - EDGE) / (PANEL_WIDTH - EDGE * 2), 0, 1);
         draggedSlider.setFraction(target);
         settingAnimation((Setting<?>) draggedSlider).sliderTarget = target;
     }
@@ -1345,26 +1080,9 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
         if (closing) return true;
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false;
-        }
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return false;
         float x = guiMouseX(event.x());
         float y = guiMouseY(event.y());
-        if (draggingWindow) {
-            windowX = x - dragX;
-            windowY = y - dragY;
-            layoutWindow();
-            positionContent();
-            return true;
-        }
-        if (draggedPreview != null) {
-            if (expanded.contains(draggedPreview.module())) {
-                playerPreviews.computeIfAbsent(draggedPreview, ignored -> new EspPlayerPreview())
-                        .drag((float) deltaX / (scale() * windowZoom()),
-                                (float) deltaY / (scale() * windowZoom()));
-            }
-            return true;
-        }
         if (draggedColor != null) {
             updateColor(x, y);
             return true;
@@ -1383,26 +1101,22 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void clampPanel(Panel panel) {
-        panel.targetX = Math.clamp(panel.targetX, SCREEN_MARGIN, Math.max(SCREEN_MARGIN, screenWidth() - panelWidth() - SCREEN_MARGIN));
-        panel.targetY = Math.clamp(panel.targetY, SCREEN_MARGIN, Math.max(SCREEN_MARGIN, screenHeight() - SCREEN_MARGIN));
+        float maxX = Math.max(SCREEN_MARGIN, screenWidth() - PANEL_WIDTH - SCREEN_MARGIN);
+        float minY = HEADER_HEIGHT + SCREEN_MARGIN;
+        float maxY = Math.max(minY, screenHeight() - SCREEN_MARGIN - ROW_HEIGHT);
+        panel.targetX = Math.clamp(panel.targetX, SCREEN_MARGIN, maxX);
+        panel.targetY = Math.clamp(panel.targetY, minY, maxY);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         if (event.button() == InputConstants.MOUSE_BUTTON_MIDDLE) describing = false;
         if (closing) return true;
-        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
-            return false;
-        }
-        if (draggedSlider != null) {
-            updateSlider(guiMouseX(event.x()));
-        }
-        boolean handled = draggingWindow || draggedPanel != null || draggedSlider != null || draggedColor != null || draggedPreview != null;
-        draggingWindow = false;
-        draggedPreview = null;
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return false;
+        if (draggedSlider != null) updateSlider(guiMouseX(event.x()));
+        boolean handled = draggedPanel != null || draggedSlider != null || draggedColor != null;
         draggedPanel = null;
         draggedSlider = null;
-        sliderPanel = null;
         draggedColor = null;
         colorPanel = null;
         return handled;
@@ -1411,26 +1125,34 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
         if (closing) return true;
-        if (draggingWindow || draggedPanel != null) {
-            targetResizeScale = Math.clamp(targetResizeScale * (float) Math.pow(1.1, vertical), 0.5f, 2.5f);
+        boolean control = InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
+        if (control || draggedPanel != null) {
+            if (vertical != 0) {
+                float steps = Math.round(targetResizeScale / RESIZE_STEP) + Math.signum((float) vertical);
+                targetResizeScale = Math.clamp(steps * RESIZE_STEP, 0.5f, 2.5f);
+            }
             return true;
         }
         float x = guiMouseX(mouseX);
         float y = guiMouseY(mouseY);
-        if (selectedCategory == Category.CONFIG) return configPanel.mouseScrolled(x, y, vertical);
         for (int i = panels.size() - 1; i >= 0; i--) {
             Panel panel = panels.get(i);
             List<Row> rows = rows(panel);
-            float height = visibleBodyHeight(panel, rows);
-            if (!inside(x, y, panel.x, panel.y, panelSpan(), height)) {
-                continue;
-            }
-            if (panel.open) {
-                panel.targetScroll = Math.clamp(panel.targetScroll - (float) vertical * ROW_HEIGHT, 0, maxScroll(panel, rows));
+            if (!inside(x, y, panel.x, panel.y, PANEL_WIDTH, visibleBodyHeight(panel, rows))) continue;
+            if (!panel.open) return true;
+            if (panel.category == Category.CONFIG) {
+                configPanel.mouseScrolled(x, y, vertical);
+            } else {
+                panel.targetScroll = Math.clamp(panel.targetScroll - (float) vertical * ROW_HEIGHT * 2, 0, maxScroll(panel, rows));
             }
             return true;
         }
         return false;
+    }
+
+    private float snapToPixel(float value) {
+        float pixels = (float) minecraft.getWindow().getGuiScale() * scale();
+        return Math.round(value * pixels) / pixels;
     }
 
     private float animateLayout(SpringAnimation motion, float target, float speed) {
@@ -1450,9 +1172,7 @@ public class ClickGuiScreen extends Screen {
     }
 
     public void tickClosedAnimations() {
-        if (open) {
-            return;
-        }
+        if (open) return;
         deltaTime = clock.nextDelta();
         updateAnimations();
     }
@@ -1460,83 +1180,72 @@ public class ClickGuiScreen extends Screen {
     private void updateAnimations() {
         for (Module module : manager.modules()) {
             ModuleAnimation animation = moduleAnimation(module);
-            if (!open) {
-                animation.hover = animate(animation.hoverMotion, 0, 18);
-            }
+            if (!open) animation.hover = animate(animation.hoverMotion, 0, 18);
             animation.open = Math.clamp(animation.openMotion.update(expanded.contains(module) ? 1 : 0, 28, 1, deltaTime), 0, 1);
-            animation.enabled = animation.enabledMotion.update(module.isEnabled() ? 1 : 0, 13, 0.68f, deltaTime);
-
+            animation.enabled = animation.enabledMotion.update(module.isEnabled() ? 1 : 0, 20, 1, deltaTime);
             for (Setting<?> setting : module.settings()) {
-                SettingAnimation state = settingAnimation(setting);
-                state.visibility = animate(state.visibilityMotion, setting.isVisible() ? 1 : 0, 28);
-                if (!setting.isVisible()) {
-                    expandedModes.remove(setting);
-                    expandedColors.remove(setting);
-                    if (binding == setting) {
-                        binding = null;
-                    }
-                    if (draggedSlider == setting) {
-                        draggedSlider = null;
-                        sliderPanel = null;
-                    }
-                    if (draggedColor == setting) {
-                        draggedColor = null;
-                        colorPanel = null;
-                    }
-                }
-                if (!open) {
-                    state.hover = animate(state.hoverMotion, 0, 18);
-                    state.modeHover.values().forEach(hover -> animate(hover, 0, 18));
-                }
-                state.dropdown = animateLayout(state.dropdownMotion,
-                        (setting instanceof ChoiceSetting mode && expandedModes.contains(setting)
-                                || setting instanceof ColorSetting color && expandedColors.contains(color)) ? 1 : 0, 20);
-                if (state.dropdown == 0) {
-                    state.modeHover.clear();
-                }
-                state.enabled = state.enabledMotion.update(setting instanceof BooleanSetting toggle && toggle.get() ? 1 : 0,
-                        13, 0.68f, deltaTime);
-                if (setting instanceof SliderSetting slider) {
-                    float target = draggedSlider == slider ? state.sliderTarget : slider.fraction();
-                    state.fraction = state.fractionMotion.update(target, draggedSlider == slider ? 32 : 26, deltaTime);
-                    state.sliderInteraction = state.sliderInteractionMotion.update(
-                            draggedSlider == slider ? 1 : Math.clamp(state.hover, 0, 1) * 0.45f, 22, 0.76f, deltaTime);
-                }
-                if (setting instanceof ColorSetting color) {
-
-                    state.hue = animate(state.hueMotion, color.hue(), 24);
-                    state.saturation = animate(state.saturationMotion, color.saturation(), 24);
-                    state.brightness = animate(state.brightnessMotion, color.brightness(), 24);
-                }
-                state.pulse = animate(state.pulseMotion, 0, 12);
+                updateSettingAnimation(setting);
             }
         }
         for (Panel panel : panels) {
-            panel.x = animate(panel.xMotion, panel.targetX, 35);
-            panel.y = animate(panel.yMotion, panel.targetY, 35);
+            panel.x = snapToPixel(panel.targetX);
+            panel.y = snapToPixel(panel.targetY);
             panel.amount = animateLayout(panel.amountMotion, panel.open ? 1 : 0, 20);
             float maximum = maxScroll(panel, rows(panel));
             panel.targetScroll = Math.clamp(panel.targetScroll, 0, maximum);
-            panel.scroll = animate(panel.scrollMotion, panel.targetScroll, 20);
-
-            float clampedScroll = Math.clamp(panel.scroll, 0, maximum);
-            if (clampedScroll != panel.scroll) panel.scrollMotion.reset(clampedScroll);
-            panel.scroll = clampedScroll;
+            float scroll = Math.clamp(animate(panel.scrollMotion, panel.targetScroll, 20), 0, maximum);
+            if (scroll != panel.scrollMotion.value()) panel.scrollMotion.reset(scroll);
+            panel.scroll = snapToPixel(scroll);
         }
+    }
+
+    private void updateSettingAnimation(Setting<?> setting) {
+        SettingAnimation state = settingAnimation(setting);
+        state.visibility = animate(state.visibilityMotion, setting.isVisible() ? 1 : 0, 28);
+        if (!setting.isVisible()) {
+            expandedModes.remove(setting);
+            expandedColors.remove(setting);
+            if (binding == setting) binding = null;
+            if (draggedSlider == setting) draggedSlider = null;
+            if (draggedColor == setting) {
+                draggedColor = null;
+                colorPanel = null;
+            }
+        }
+        if (!open) {
+            state.hover = animate(state.hoverMotion, 0, 18);
+            state.modeHover.values().forEach(hover -> animate(hover, 0, 18));
+        }
+        state.dropdown = animateLayout(state.dropdownMotion,
+                (setting instanceof ChoiceSetting && expandedModes.contains(setting)
+                        || setting instanceof ColorSetting color && expandedColors.contains(color)) ? 1 : 0, 20);
+        if (state.dropdown == 0) state.modeHover.clear();
+        state.enabled = state.enabledMotion.update(setting instanceof BooleanSetting toggle && toggle.get() ? 1 : 0,
+                20, 1, deltaTime);
+        if (setting instanceof SliderSetting slider) {
+            float target = draggedSlider == slider ? state.sliderTarget : slider.fraction();
+            state.fraction = state.fractionMotion.update(target, draggedSlider == slider ? 32 : 26, deltaTime);
+        }
+        if (setting instanceof ColorSetting color) {
+            state.hue = animate(state.hueMotion, color.hue(), 24);
+            state.saturation = animate(state.saturationMotion, color.saturation(), 24);
+            state.brightness = animate(state.brightnessMotion, color.brightness(), 24);
+        }
+        state.pulse = animate(state.pulseMotion, 0, 12);
     }
 
     private Panel panelAt(float x, float y) {
         for (int i = panels.size() - 1; i >= 0; i--) {
             Panel panel = panels.get(i);
-            if (inside(x, y, panel.x, panel.y, panelSpan(), visibleBodyHeight(panel, rows(panel)))) {
+            if (inside(x, y, panel.x, panel.y - HEADER_HEIGHT, PANEL_WIDTH, HEADER_HEIGHT + visibleBodyHeight(panel, rows(panel)))) {
                 return panel;
             }
         }
         return null;
     }
 
-    public Screen cleanViewBackground() {
-        return cleanViewBackground;
+    boolean contains(double mouseX, double mouseY) {
+        return panelAt(guiMouseX(mouseX), guiMouseY(mouseY)) != null;
     }
 
     public void cleanViewBackground(Screen screen) {
@@ -1547,18 +1256,19 @@ public class ClickGuiScreen extends Screen {
         returnTo = screen;
     }
 
+    private void releaseDrags() {
+        draggedPanel = null;
+        draggedSlider = null;
+        draggedColor = null;
+        colorPanel = null;
+        binding = null;
+    }
+
     @Override
     public void onClose() {
         if (!open || closing) return;
         closing = true;
-        draggingWindow = false;
-        draggedPanel = null;
-        draggedSlider = null;
-        sliderPanel = null;
-        draggedColor = null;
-        colorPanel = null;
-        draggedPreview = null;
-        binding = null;
+        releaseDrags();
         if (owner != null) owner.setEnabled(false);
     }
 
@@ -1575,18 +1285,11 @@ public class ClickGuiScreen extends Screen {
     public void removed() {
         stopEditingSlider(false);
         capturedBindKey = -1;
-        if (configPanel != null) configPanel.unfocus();
-        draggingWindow = false;
-        draggedPreview = null;
+        configPanel.unfocus();
         open = false;
         closing = false;
         windowPop.reset(0);
-        binding = null;
-        draggedPanel = null;
-        draggedSlider = null;
-        sliderPanel = null;
-        draggedColor = null;
-        colorPanel = null;
+        releaseDrags();
         if (owner != null) owner.setEnabled(false);
         super.removed();
     }
@@ -1603,7 +1306,7 @@ public class ClickGuiScreen extends Screen {
 
     public boolean isTyping() {
         return binding != null || capturedBindKey != -1 || editingSlider != null
-                || selectedCategory == Category.CONFIG && configPanel != null && configPanel.focused();
+                || configPanel != null && configPanel.focused();
     }
 
     public boolean isOpen() {
@@ -1635,7 +1338,7 @@ public class ClickGuiScreen extends Screen {
             binding = null;
             return true;
         }
-        if (selectedCategory == Category.CONFIG) {
+        if (configPanel.focused()) {
             return configPanel.keyPressed(event) || super.keyPressed(event);
         }
         return super.keyPressed(event);
@@ -1653,15 +1356,13 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (closing || binding != null || capturedBindKey != -1) return true;
+        int typed = event.codepoint();
         if (editingSlider != null) {
-            int typed = event.codepoint();
             if (!Character.isDigit(typed) && typed != '.' && typed != '-' && typed != '+') return true;
             sliderEditedAt = System.nanoTime();
             return sliderInput.charTyped(event);
         }
-        if (selectedCategory == Category.CONFIG && configPanel.focused()) {
-            return configPanel.charTyped(event);
-        }
+        if (configPanel.focused()) return configPanel.charTyped(event);
         return super.charTyped(event);
     }
 

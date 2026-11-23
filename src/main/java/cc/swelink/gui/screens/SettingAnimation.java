@@ -21,8 +21,7 @@ final class SettingAnimation {
     final SpringAnimation visibilityMotion;
     final SpringAnimation enabledMotion;
     final SpringAnimation fractionMotion;
-    final SpringAnimation sliderInteractionMotion = new SpringAnimation();
-    float sliderInteraction;
+    final SpringAnimation chipMotion = new SpringAnimation(-1);
     float sliderTarget;
     float dropdown;
     float visibility;

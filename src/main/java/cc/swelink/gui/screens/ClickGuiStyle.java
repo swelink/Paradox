@@ -2,53 +2,34 @@ package cc.swelink.gui.screens;
 
 import cc.swelink.renderer.ThemeColors;
 
-import net.minecraft.util.ARGB;
-
 public final class ClickGuiStyle {
-    static final float ROW_HEIGHT = 36;
-    static final float CONTENT_INSET = 18;
-    static final float WINDOW_RADIUS = 11.5f;
     static final float CARD_RADIUS = 9.2f;
-    static final float MODULE_FONT_SIZE = 14;
+    static final float MODULE_FONT_SIZE = 16;
     static final float SETTING_FONT_SIZE = 12;
     static final float FONT_SIZE = 14;
     static final float SETTINGS_SPACING = 4;
     static final float SETTING_ROW_HEIGHT = 24;
     static final float SLIDER_HEIGHT = 36;
     static final float PICKER_HEIGHT = 104;
-    static final int BORDER = 0x35FFFFFF;
-    private static final int GLASS_ALPHA = 0x55000000;
+    static final int PANEL_HEADER = 0xFF151415;
+    static final int PANEL_BODY = 0xFF1F1F1F;
+    static final int PANEL_INSET = 0xFF171717;
+    static final int CONTROL = 0xFF2A2A2A;
+    static final int CONTROL_DARK = 0xFF232323;
+    static final int TRACK = 0xFF3A3A3A;
+    static final int TITLE = 0xFFF8F8F6;
+    static final int MODULE_TEXT = 0xFFB4B4B4;
+    static final int MODULE_HOVER = 0xFFE2E2E2;
+    static final int LABEL = 0xFF767676;
+    static final int KEY_TEXT = 0xFF8C8C8C;
+    static final int ARROW = 0xFF555555;
 
     static int header() {
         return ThemeColors.theme().header;
     }
 
-    static int sidebar() {
-        return ThemeColors.theme().sidebar;
-    }
-
-    static int island() {
-        return ARGB.opaque(ThemeColors.hudPanel());
-    }
-
-    static int card() {
-        return sidebar();
-    }
-
-    static int cardEnabled() {
-        return component(ThemeColors.theme().cardEnabled);
-    }
-
-    static int settings() {
-        return component(ThemeColors.theme().settings);
-    }
-
     static int raised() {
-        return component(ThemeColors.theme().raised);
-    }
-
-    static int track() {
-        return component(ThemeColors.theme().track);
+        return ThemeColors.theme().raised;
     }
 
     public static int disabled() {
@@ -59,24 +40,12 @@ public final class ClickGuiStyle {
         return ThemeColors.theme().dim;
     }
 
-    static int hover() {
-        return component(ThemeColors.theme().hover);
-    }
-
-    private static int component(int color) {
-        return color;
-    }
-
     public static int text() {
         return ThemeColors.theme().text;
     }
 
     static int muted() {
         return ThemeColors.theme().muted;
-    }
-
-    static int glass(int color) {
-        return color & 0xFFFFFF | GLASS_ALPHA;
     }
 
     private ClickGuiStyle() {

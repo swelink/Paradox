@@ -27,10 +27,6 @@ public final class HudChatOverlay extends Screen {
         this.accent = accent;
     }
 
-    boolean draggingHud() {
-        return dragging != null;
-    }
-
     private boolean editable(Module module) {
         return module.isEnabled() && module instanceof HudElement
                 && (!(module instanceof PlacedHudElement placed) || placed.visibleForDragging());

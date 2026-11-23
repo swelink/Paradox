@@ -1,7 +1,6 @@
 package cc.swelink.systems.modules.client;
 
 import cc.swelink.gui.screens.ClickGuiScreen;
-import cc.swelink.gui.screens.ConfigScreen;
 import cc.swelink.gui.screens.HudEditorScreen;
 import cc.swelink.renderer.Theme;
 import cc.swelink.settings.BooleanSetting;
@@ -34,7 +33,6 @@ public class ClickGuiModule extends Module {
     private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final BooleanSetting islandShadows = addSetting(new BooleanSetting("Island shadows", true));
     private final ClickGuiScreen screen;
-    private ConfigScreen configScreen;
     private final ModuleManager manager;
     private boolean returning;
 
@@ -52,24 +50,6 @@ public class ClickGuiModule extends Module {
             else setEnabled(true);
         } finally {
             returning = false;
-        }
-    }
-
-    public ConfigScreen configScreen() {
-        if (configScreen == null) configScreen = new ConfigScreen(manager, this::accentColor);
-        return configScreen;
-    }
-
-    public void returnFromConfig() {
-        returnFromHudEditor();
-    }
-
-    public void openConfig() {
-        var current = Minecraft.getInstance().gui.screen();
-        if (current == screen) {
-            screen.openConfig();
-        } else if (!(current instanceof ConfigScreen)) {
-            configScreen().show(current != null && restorable(current) ? current : null, false);
         }
     }
 
@@ -93,17 +73,8 @@ public class ClickGuiModule extends Module {
             editor.exit();
             return;
         }
-        if (current instanceof ConfigScreen config && !returning) {
-            setEnabled(false);
-            config.exit();
-            return;
-        }
         if (current == screen && screen.reopen()) return;
-        if (current instanceof ConfigScreen config) {
-            screen.returnTo(config.back());
-            screen.cleanViewBackground(config.back());
-            screen.carryWindow();
-        } else if (current instanceof HudEditorScreen editor) {
+        if (current instanceof HudEditorScreen editor) {
             screen.returnTo(editor.returnTo());
             screen.cleanViewBackground(editor.returnTo());
             screen.carryWindow();

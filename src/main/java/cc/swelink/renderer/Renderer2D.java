@@ -134,27 +134,6 @@ public final class Renderer2D implements AutoCloseable {
         return 1 / Math.max(Minecraft.getInstance().getWindow().getGuiScale() * scale, 0.0001f);
     }
 
-    private static void strip(VertexConsumer vertices, Matrix3x2fc pose, float x1, float y1, float x2, float y2,
-                              float nx1, float ny1, float nx2, float ny2, float from, float to, int fromColor, int toColor) {
-        vertices.addVertexWith2DPose(pose, x1 + nx1 * from, y1 + ny1 * from).setColor(fromColor);
-        vertices.addVertexWith2DPose(pose, x1 + nx1 * to, y1 + ny1 * to).setColor(toColor);
-        vertices.addVertexWith2DPose(pose, x2 + nx2 * to, y2 + ny2 * to).setColor(toColor);
-        vertices.addVertexWith2DPose(pose, x2 + nx2 * from, y2 + ny2 * from).setColor(fromColor);
-    }
-
-    public void roundedGradient(float x, float y, float width, float height, float radius, int leftColor, int rightColor) {
-        if (!packable(x, y, width, height)) return;
-        int encodedWidth = Math.round(width * 16);
-        int encodedHeight = Math.round(height * 16);
-        int corner = Math.round(SdfPipeline.corner(radius, width, height) * 16);
-        submit(Pipelines.ROUNDED_GRADIENT, TextureSetup.noTexture(), x, y, width, height, (vertices, pose) -> {
-            gradientVertex(vertices, pose, x, y, 0, 0, encodedWidth, encodedHeight, corner, leftColor);
-            gradientVertex(vertices, pose, x, y + height, 0, height, encodedWidth, encodedHeight, corner, leftColor);
-            gradientVertex(vertices, pose, x + width, y + height, width, height, encodedWidth, encodedHeight, corner, rightColor);
-            gradientVertex(vertices, pose, x + width, y, width, 0, encodedWidth, encodedHeight, corner, rightColor);
-        });
-    }
-
     private static void gradientVertex(VertexConsumer vertices, Matrix3x2fc pose, float x, float y,
                                        float localX, float localY, int width, int height, int radius, int color) {
         vertices.addVertexWith2DPose(pose, x, y).setColor(color).setUv(0, 0).setUv3(localX, localY)

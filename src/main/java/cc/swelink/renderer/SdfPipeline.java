@@ -10,7 +10,6 @@ public final class SdfPipeline {
     private static final int FILL = 0;
     private static final int BORDER = 1;
     private static final int SHADOW = 2;
-    private static final int STROKE = 3;
     private static final int CUTOUT = 4;
     private static final int BACKDROP_SHADOW = 5;
     private static final int DOCKED_BORDER = 6;
@@ -69,28 +68,6 @@ public final class SdfPipeline {
             vertex(vertices, pose, x1, y2, x1 - x, y2 - y, width, height, encodedRadius, encodedBorder, 0, shapeType, color);
             vertex(vertices, pose, x2, y2, x2 - x, y2 - y, width, height, encodedRadius, encodedBorder, 0, shapeType, color);
             vertex(vertices, pose, x2, y1, x2 - x, y1 - y, width, height, encodedRadius, encodedBorder, 0, shapeType, color);
-        });
-    }
-
-    public void clippedDockedRect(float x, float y, float width, float height, float radius, int color, int edges,
-                                  float left, float top, float right, float bottom) {
-        if (!Renderer2D.drawable(x, y, width, height) || (color >>> 24) == 0) {
-            return;
-        }
-        float clamped = corner(radius, width, height);
-        int encodedRadius = fixed(clamped);
-        int shapeType = DOCKED_FILL | (edges & 15) << 4;
-        float padding = clamped + 1;
-        float x1 = Math.max(x - padding, left);
-        float y1 = Math.max(y - padding, top);
-        float x2 = Math.min(x + width + padding, right);
-        float y2 = Math.min(y + height + padding, bottom);
-        if (!(x2 > x1 && y2 > y1)) return;
-        renderer.submit(Pipelines.SDF, TextureSetup.noTexture(), x1, y1, x2 - x1, y2 - y1, (vertices, pose) -> {
-            vertex(vertices, pose, x1, y1, x1 - x, y1 - y, width, height, encodedRadius, 0, 0, shapeType, color);
-            vertex(vertices, pose, x1, y2, x1 - x, y2 - y, width, height, encodedRadius, 0, 0, shapeType, color);
-            vertex(vertices, pose, x2, y2, x2 - x, y2 - y, width, height, encodedRadius, 0, 0, shapeType, color);
-            vertex(vertices, pose, x2, y1, x2 - x, y1 - y, width, height, encodedRadius, 0, 0, shapeType, color);
         });
     }
 
@@ -210,7 +187,7 @@ public final class SdfPipeline {
         });
     }
 
-    public void line(float x1, float y1, float x2, float y2, float thickness, int color) {
+    public void roundLine(float x1, float y1, float x2, float y2, float thickness, int color) {
         float length = (float) Math.hypot(x2 - x1, y2 - y1);
         if (!(length > 0 && thickness > 0) || !Float.isFinite(length + thickness)) {
             return;
@@ -220,7 +197,8 @@ public final class SdfPipeline {
         try {
             pose.translate((x1 + x2) / 2, (y1 + y2) / 2);
             pose.rotate((float) Math.atan2(y2 - y1, x2 - x1));
-            shape(-length / 2, -thickness / 2, length, thickness, 0, 0, 0, color, STROKE);
+            float span = length + thickness;
+            shape(-span / 2, -thickness / 2, span, thickness, thickness / 2, 0, 0, color, FILL);
         } finally {
             pose.popMatrix();
         }

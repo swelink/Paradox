@@ -1,20 +1,30 @@
 package cc.swelink.gui.screens;
 
-import cc.swelink.gui.previews.EspPlayerPreview;
-import cc.swelink.settings.PlayerPreviewSetting;
 import cc.swelink.settings.Setting;
 import cc.swelink.settings.SliderSetting;
 import cc.swelink.systems.modules.Module;
 
 record Row(Module module, Setting<?> setting, float amount, float groupOffset, float groupHeight,
-           boolean spacer, String modeChoice, boolean colorPicker, float pad) {
+           boolean spacer, String modeChoice, boolean colorPicker, float baseHeight) {
+    Row(Module module, Setting<?> setting, float amount, float groupOffset, float groupHeight,
+        boolean spacer, String modeChoice, boolean colorPicker) {
+        this(module, setting, amount, groupOffset, groupHeight, spacer, modeChoice, colorPicker, Float.NaN);
+    }
+
     Row(Module module, Setting<?> setting, float amount) {
         this(module, setting, amount, 0, 0, false, null, false);
     }
 
-    Row(Module module, Setting<?> setting, float amount, float groupOffset, float groupHeight,
-        boolean spacer, String modeChoice, boolean colorPicker) {
-        this(module, setting, amount, groupOffset, groupHeight, spacer, modeChoice, colorPicker, 0);
+    Row sized(float height) {
+        return new Row(module, setting, amount, groupOffset, groupHeight, spacer, modeChoice, colorPicker, height);
+    }
+
+    Row copy(float amount, float groupOffset, float groupHeight) {
+        return new Row(module, setting, amount, groupOffset, groupHeight, spacer, modeChoice, colorPicker, baseHeight);
+    }
+
+    static Row module(Module module, float height) {
+        return new Row(module, null, 1, 0, 0, false, null, false, height);
     }
 
     static Row spacing(Module module, float amount) {
@@ -25,14 +35,11 @@ record Row(Module module, Setting<?> setting, float amount, float groupOffset, f
         if (spacer) {
             return ClickGuiStyle.SETTINGS_SPACING * amount;
         }
-        return ((colorPicker ? ClickGuiStyle.PICKER_HEIGHT : setting == null ? ClickGuiStyle.ROW_HEIGHT
-                : settingHeight(setting)) + pad * 2) * amount;
+        float base = !Float.isNaN(baseHeight) ? baseHeight : colorPicker ? ClickGuiStyle.PICKER_HEIGHT : settingHeight(setting);
+        return base * amount;
     }
 
     static float settingHeight(Setting<?> setting) {
-        if (setting instanceof PlayerPreviewSetting) {
-            return EspPlayerPreview.HEIGHT;
-        }
         return setting instanceof SliderSetting ? ClickGuiStyle.SLIDER_HEIGHT : ClickGuiStyle.SETTING_ROW_HEIGHT;
     }
 }

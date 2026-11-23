@@ -6,7 +6,6 @@ import cc.swelink.events.ModuleToggleEvent;
 import cc.swelink.events.PreTickEvent;
 import cc.swelink.settings.BindModeSetting;
 import cc.swelink.systems.modules.client.ClickGuiModule;
-import cc.swelink.systems.modules.client.ConfigModule;
 import cc.swelink.systems.modules.client.HudEditorModule;
 import cc.swelink.systems.modules.combat.AimbotModule;
 import cc.swelink.systems.modules.combat.BowBotModule;
@@ -214,7 +213,6 @@ public class ModuleManager {
         register(new ModuleListModule());
         register(clickGui);
         register(new HudEditorModule(this));
-        register(new ConfigModule(this));
         initialized = true;
     }
 

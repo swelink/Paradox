@@ -3,6 +3,7 @@ package cc.swelink.gui.screens;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.GuiViewport;
 import cc.swelink.renderer.Renderer2D;
+import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.ModuleManager;
 import cc.swelink.systems.modules.client.ClickGuiModule;
 import cc.swelink.utils.hud.HudPlacement;
@@ -22,21 +23,19 @@ import java.util.function.IntSupplier;
 
 public final class HudEditorScreen extends Screen {
     private final ModuleManager manager;
-    private final IntSupplier accent;
     private final HudChatOverlay overlay;
-    private static HudModulesMenu menu;
+    private static ClickGuiScreen hudPanel;
+    private boolean panelDragging;
     private final Screen returnTo;
     private final boolean switched;
-    private boolean menuDragging;
 
     public HudEditorScreen(ModuleManager manager, IntSupplier accent, Screen returnTo, boolean switched) {
         super(Component.literal("HUD Editor"));
         this.switched = switched;
         this.manager = manager;
-        this.accent = accent;
         this.returnTo = returnTo;
         overlay = new HudChatOverlay(manager, accent);
-        if (menu == null) menu = new HudModulesMenu(manager, accent);
+        if (hudPanel == null) hudPanel = new ClickGuiScreen(manager, null, accent, new Category[] {Category.HUD}, true);
     }
 
     public Screen returnTo() {
@@ -46,15 +45,14 @@ public final class HudEditorScreen extends Screen {
     @Override
     protected void init() {
         overlay.init(width, height);
-        if (switched) menu.carryWindow();
-        menu.init(width, height);
+        hudPanel.init(width, height);
     }
 
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
         overlay.resize(width, height);
-        menu.resize(width, height);
+        hudPanel.resize(width, height);
     }
 
     @Override
@@ -86,66 +84,70 @@ public final class HudEditorScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        boolean overMenu = menuDragging || menu.contains(mouseX, mouseY);
-        if (!overMenu || overlay.draggingHud()) overlay.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        boolean overPanel = panelDragging || hudPanel.contains(mouseX, mouseY);
+        overlay.extractRenderState(graphics, overPanel ? -1 : mouseX, overPanel ? -1 : mouseY, partialTick);
         graphics.nextStratum();
-        menu.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        hudPanel.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (menu.contains(event.x(), event.y())) {
-            menuDragging = true;
-            menu.mouseClicked(event, doubleClick);
-            return true;
+        if (hudPanel.contains(event.x(), event.y()) || hudPanel.isTyping()) {
+            panelDragging = true;
+            return hudPanel.mouseClicked(event, doubleClick);
         }
-        if (overlay.mouseClicked(event, doubleClick)) return true;
-        return super.mouseClicked(event, doubleClick);
+        return overlay.mouseClicked(event, doubleClick) || super.mouseClicked(event, doubleClick);
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
-        if (menuDragging) return menu.mouseDragged(event, deltaX, deltaY);
+        if (panelDragging) return hudPanel.mouseDragged(event, deltaX, deltaY);
         return overlay.mouseDragged(event, deltaX, deltaY) || super.mouseDragged(event, deltaX, deltaY);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (menuDragging) {
-            menuDragging = false;
-            return menu.mouseReleased(event);
+        if (panelDragging) {
+            panelDragging = false;
+            return hudPanel.mouseReleased(event);
         }
         return overlay.mouseReleased(event) || super.mouseReleased(event);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
-        if (menu.contains(mouseX, mouseY)) return menu.mouseScrolled(mouseX, mouseY, horizontal, vertical);
+        if (hudPanel.contains(mouseX, mouseY)) return hudPanel.mouseScrolled(mouseX, mouseY, horizontal, vertical);
         return overlay.mouseScrolled(mouseX, mouseY, horizontal, vertical)
                 || super.mouseScrolled(mouseX, mouseY, horizontal, vertical);
     }
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() != InputConstants.KEY_ESCAPE && menu.keyPressed(event)) return true;
+        boolean escape = event.key() == InputConstants.KEY_ESCAPE;
+        if ((!escape || hudPanel.isTyping()) && hudPanel.keyPressed(event)) return true;
         return super.keyPressed(event);
     }
 
     @Override
+    public boolean keyReleased(KeyEvent event) {
+        return hudPanel.keyReleased(event) || super.keyReleased(event);
+    }
+
+    @Override
     public boolean charTyped(CharacterEvent event) {
-        return menu.charTyped(event) || super.charTyped(event);
+        return hudPanel.charTyped(event) || super.charTyped(event);
     }
 
     @Override
     public void tick() {
         super.tick();
-        menu.tick();
+        hudPanel.tick();
     }
 
     @Override
     public void removed() {
         overlay.removed();
-        menu.removed();
+        hudPanel.removed();
         super.removed();
     }
 

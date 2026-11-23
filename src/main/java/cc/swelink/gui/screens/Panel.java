@@ -12,8 +12,6 @@ final class Panel {
     float targetX;
     float targetY;
     float amount = 1;
-    final SpringAnimation xMotion;
-    final SpringAnimation yMotion;
     final SpringAnimation scrollMotion = new SpringAnimation();
     final SpringAnimation amountMotion = new SpringAnimation(1);
     boolean open = true;
@@ -22,7 +20,5 @@ final class Panel {
         this.category = category;
         this.x = this.targetX = x;
         this.y = this.targetY = y;
-        xMotion = new SpringAnimation(x);
-        yMotion = new SpringAnimation(y);
     }
 }

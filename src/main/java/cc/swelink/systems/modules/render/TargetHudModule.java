@@ -29,7 +29,6 @@ import java.util.Locale;
 
 public final class TargetHudModule extends Module implements PlacedHudElement {
     private static final int TRACK = 0xFF252529;
-    private static final float PADDING = 4;
     private static final float MIN_WIDTH = 172;
     private static final float HEAD_SIZE = 36;
     private static final float HEAD_PANEL_WIDTH = 52;

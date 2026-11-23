@@ -42,8 +42,6 @@ final class Pipelines {
             Paradox.id("core/frosted_glass"), SDF_FORMAT, RenderPipelines.GUI_TEXTURED);
     static final RenderPipeline ROUNDED_TEXTURE = gui("rounded_texture", Paradox.id("core/rounded_texture"),
             Paradox.id("core/rounded_blur"), SDF_FORMAT, RenderPipelines.GUI_TEXTURED);
-    static final RenderPipeline ROUNDED_GRADIENT = gui("rounded_gradient", Paradox.id("core/rounded_texture"),
-            Paradox.id("core/rounded_gradient"), SDF_FORMAT, RenderPipelines.GUI);
     static final RenderPipeline COLOR_FIELD = gui("color_field", Paradox.id("core/rounded_texture"),
             Paradox.id("core/color_field"), SDF_FORMAT, RenderPipelines.GUI);
     static final RenderPipeline HUE_BAR = gui("hue_bar", Paradox.id("core/rounded_texture"),

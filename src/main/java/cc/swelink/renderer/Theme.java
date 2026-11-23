@@ -16,12 +16,7 @@ public enum Theme {
     public final int primary;
     public final int secondary;
     public final int header;
-    public final int settings;
-    public final int sidebar;
-    public final int cardEnabled;
-    public final int hover;
     public final int raised;
-    public final int track;
     public final int disabled;
     public final int muted;
     public final int text;
@@ -37,17 +32,12 @@ public enum Theme {
         this.secondary = secondary;
         this.text = text;
         header = base;
-        settings = layer(base, text, 0.11f);
-        sidebar = layer(base, text, 0.04f);
-        cardEnabled = layer(base, text, 0.085f);
-        hover = layer(base, text, 0.14f);
         raised = layer(base, text, 0.18f);
-        track = layer(base, text, 0.22f);
         disabled = layer(base, text, 0.4f);
         muted = layer(base, text, 0.7f);
         dim = base & 0xFFFFFF | 0x28000000;
         hudPanel = base & 0xFFFFFF | 0xDC000000;
-        hudHeader = sidebar;
+        hudHeader = layer(base, text, 0.04f);
     }
 
     private static int layer(int base, int text, float amount) {

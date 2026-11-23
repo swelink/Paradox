@@ -10,7 +10,8 @@ public enum Category {
     PLAYER("Player", "player"),
     CLIENT("Client", "client"),
     MOVEMENT("Movement", "movement"),
-    CONFIG("Config", null);
+    HUD("HUD", "hud"),
+    CONFIG("Config", "config");
 
     private final String title;
     private final Identifier icon;

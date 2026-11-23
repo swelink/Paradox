@@ -106,7 +106,6 @@ void main() {
     float aa=max(fwidth(distance),0.0001);
     bool cornerShadow = params.w == 8.0;
     bool backdropShadow = params.w == 5.0 || cornerShadow;
-    if(params.w==3.0) aa*=0.35;
     float coverage=1.0-smoothstep(-aa*0.5,aa*0.5,distance);
     if(params.w==4.0) coverage=1.0-coverage;
     if(params.w==1.0) coverage*=smoothstep(-params.y-aa*0.5,-params.y+aa*0.5,distance);

@@ -1,11 +1,14 @@
 package cc.swelink.gui.screens;
 
+import static cc.swelink.gui.screens.ClickGuiDraw.fitLabel;
+import static cc.swelink.gui.screens.ClickGuiDraw.label;
+import static cc.swelink.gui.screens.ClickGuiDraw.mix;
+
 import cc.swelink.Paradox;
-import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.SpringAnimation;
-import cc.swelink.renderer.TextRenderer;
+import cc.swelink.renderer.ThemeColors;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
@@ -17,27 +20,25 @@ import net.minecraft.util.ARGB;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public final class ConfigPanel {
-    private static final float ROW_HEIGHT = ClickGuiStyle.ROW_HEIGHT;
-    private static final float CARD_INSET = 3;
-    private static final float CAP_HEIGHT = 0.73f;
-    private static final float NAME_PAD = (ROW_HEIGHT - CARD_INSET * 2 - ClickGuiStyle.MODULE_FONT_SIZE * CAP_HEIGHT) / 2;
-    private static final float LABEL_SIZE = 9;
-    private static final float LABEL_GAP = 14;
-    private static final float STATUS_SIZE = 11;
+    static final float ROW_HEIGHT = 28;
+    private static final float EDGE = (ROW_HEIGHT - ClickGuiStyle.MODULE_FONT_SIZE * 0.73f) / 2;
+    private static final float FONT = ClickGuiStyle.MODULE_FONT_SIZE;
+    private static final float ACTION_FONT = 10.5f;
+    private static final float ACTION_GAP = 8;
+    private static final float STATUS_FONT = 10.5f;
     private static final float STATUS_HEIGHT = 20;
     private static final int DELETE_COLOR = 0xFFFF6B6B;
-    private static final String[] ACTIONS = {"load", "save", "delete"};
+    private static final String[] ACTIONS = {"Save", "Delete"};
     private final AnimatedInput text = new AnimatedInput();
     private final SpringAnimation scrollMotion = new SpringAnimation();
     private final Map<String, SpringAnimation> hovers = new HashMap<>();
     private final FrameClock clock = new FrameClock();
     private final EditBox name;
     private List<String> configs = List.of();
-    private String selected = "";
+    private String loaded = "";
     private String status = "";
     private long statusUntil;
     private long lastRefresh;
@@ -51,6 +52,23 @@ public final class ConfigPanel {
     private float width;
     private float height;
     private float createLeft;
+    private final Map<String, float[]> actionBounds = new HashMap<>();
+    private float shapeTop;
+    private float shapeHeight;
+    private float shapeRadius;
+
+    public void shape(float top, float height, float radius) {
+        shapeTop = top;
+        shapeHeight = height;
+        shapeRadius = radius;
+    }
+
+    private void strip(Renderer2D renderer, float top, float stripHeight, int color) {
+        float bottom = Math.min(top + stripHeight, y + height);
+        top = Math.max(top, y);
+        if (bottom <= top) return;
+        renderer.sdf.clippedRoundedRect(x, shapeTop, width, shapeHeight, shapeRadius, color, x, top, x + width, bottom);
+    }
 
     public ConfigPanel(Minecraft client) {
         name = new EditBox(client.font, Component.literal("New config"));
@@ -70,6 +88,10 @@ public final class ConfigPanel {
         }
     }
 
+    public float contentHeight() {
+        return ROW_HEIGHT * (1 + configs.size()) + (statusVisible() ? STATUS_HEIGHT : 0);
+    }
+
     public void render(Renderer2D renderer, float x, float y, float width, float height,
                        float mouseX, float mouseY, int accent) {
         this.x = x;
@@ -83,74 +105,60 @@ public final class ConfigPanel {
         drawCreateRow(renderer, mouseX, mouseY, accent);
         float listY = listTop();
         float listHeight = listHeight();
+        actionBounds.clear();
         try (var clip = renderer.clips.push(x, listY, width, listHeight)) {
+            boolean inList = contains(mouseX, mouseY, x, listY, width, listHeight);
             for (int i = 0; i < configs.size(); i++) {
                 float rowY = listY + i * ROW_HEIGHT - scroll;
                 if (rowY + ROW_HEIGHT < listY || rowY > listY + listHeight) continue;
-                boolean inList = contains(mouseX, mouseY, x, listY, width, listHeight);
                 drawConfigRow(renderer, configs.get(i), rowY, inList ? mouseX : -10000, inList ? mouseY : -10000);
             }
         }
         if (statusVisible()) {
-            renderer.text.draw(fit(renderer, status, width - NAME_PAD * 2, STATUS_SIZE), x + CARD_INSET + NAME_PAD,
-                    y + height - STATUS_HEIGHT / 2 - renderer.text.lineHeight(STATUS_SIZE) / 2, STATUS_SIZE,
-                    error ? DELETE_COLOR : ClickGuiStyle.muted());
+            label(renderer, fitLabel(renderer, status, STATUS_FONT, width - EDGE * 2), x + EDGE,
+                    y + height - STATUS_HEIGHT / 2, STATUS_FONT, error ? DELETE_COLOR : ClickGuiStyle.muted());
         }
+    }
+
+    private int textColor() {
+        return ClickGuiStyle.MODULE_TEXT;
     }
 
     private void drawCreateRow(Renderer2D renderer, float mouseX, float mouseY, int accent) {
-        boolean hover = contains(mouseX, mouseY, x, y, width, ROW_HEIGHT);
-        float lift = hover("create-row", hover || focused);
-        card(renderer, y, ARGB.srgbLerp(lift * 0.5f, ClickGuiStyle.card(), ClickGuiStyle.hover()));
+        strip(renderer, y, ROW_HEIGHT, ClickGuiStyle.PANEL_INSET);
         String value = name.getValue().strip();
         boolean canCreate = !value.isEmpty() && !configs.contains(value);
-        float labelWidth = renderer.text.measure("CREATE", LABEL_SIZE).width();
-        float labelX = x + width - CARD_INSET - NAME_PAD - labelWidth;
+        float labelWidth = renderer.text.measure("Create", ACTION_FONT).width();
+        float labelX = x + width - EDGE - labelWidth;
         createLeft = labelX;
-        float labelHover = hover("create", canCreate && contains(mouseX, mouseY, labelX - 6, y, labelWidth + 12, ROW_HEIGHT));
-        label(renderer, "CREATE", labelX, y, canCreate ? AccentWave.text(ClickGuiStyle.muted(), 0.6f + labelHover * 0.4f)
-                : AccentWave.text(ClickGuiStyle.disabled(), 0));
-        float textX = x + CARD_INSET + NAME_PAD;
-        text.draw(renderer, name, "New config", focused, textX, y + CARD_INSET + 4,
-                labelX - textX - LABEL_GAP, ROW_HEIGHT - CARD_INSET * 2 - 8, accent, delta);
+        float labelHover = hover("create", canCreate && contains(mouseX, mouseY, labelX - 4, y, labelWidth + 8, ROW_HEIGHT));
+        int primary = ARGB.opaque(ThemeColors.primary());
+        label(renderer, "Create", labelX, y + ROW_HEIGHT / 2, ACTION_FONT,
+                canCreate ? mix(mix(textColor(), primary, 0.6f), primary, labelHover) : ClickGuiStyle.disabled());
+        float textX = x + EDGE;
+        text.draw(renderer, name, "New config", focused, textX, y + 4, labelX - textX - ACTION_GAP, ROW_HEIGHT - 8,
+                accent, delta);
     }
 
     private void drawConfigRow(Renderer2D renderer, String config, float rowY, float mouseX, float mouseY) {
-        boolean active = config.equals(selected);
         boolean hovered = contains(mouseX, mouseY, x, rowY, width, ROW_HEIGHT);
         float hover = hover("row:" + config, hovered);
-        int background = ARGB.srgbLerp(active ? 0.6f : 0, ClickGuiStyle.card(), ClickGuiStyle.cardEnabled());
-        card(renderer, rowY, ARGB.srgbLerp(hover * 0.5f, background, ClickGuiStyle.hover()));
-        float right = x + width - CARD_INSET - NAME_PAD;
+        float right = x + width - EDGE;
         for (int i = ACTIONS.length - 1; i >= 0; i--) {
             String action = ACTIONS[i];
-            String label = action.toUpperCase(Locale.ROOT);
-            float labelWidth = renderer.text.measure(label, LABEL_SIZE).width();
+            float labelWidth = renderer.text.measure(action, ACTION_FONT).width();
             float labelX = right - labelWidth;
-            float amount = hover(action + ":" + config, contains(mouseX, mouseY, labelX - LABEL_GAP / 2, rowY,
-                    labelWidth + LABEL_GAP, ROW_HEIGHT));
-            int base = ARGB.srgbLerp(hover, ClickGuiStyle.disabled(), ClickGuiStyle.muted());
-            label(renderer, label, labelX, rowY, action.equals("delete")
-                    ? AccentWave.text(ARGB.srgbLerp(amount, base, DELETE_COLOR), 0)
-                    : AccentWave.text(base, amount));
-            right = labelX - LABEL_GAP;
+            boolean over = contains(mouseX, mouseY, labelX - ACTION_GAP / 2, rowY, labelWidth + ACTION_GAP, ROW_HEIGHT);
+            float amount = hover(action + ":" + config, over);
+            actionBounds.put(action + ":" + config, new float[] {labelX - ACTION_GAP / 2, labelWidth + ACTION_GAP});
+            int base = mix(ClickGuiStyle.disabled(), ClickGuiStyle.muted(), hover);
+            int target = action.equals("Delete") ? DELETE_COLOR : textColor();
+            label(renderer, action, labelX, rowY + ROW_HEIGHT / 2, ACTION_FONT, mix(base, target, amount));
+            right = labelX - ACTION_GAP;
         }
-        float nameX = x + CARD_INSET + NAME_PAD;
-        float nameWidth = right - nameX - 4;
-        float size = ClickGuiStyle.MODULE_FONT_SIZE;
-        renderer.text.drawColored(fit(renderer, config, nameWidth, size), nameX,
-                rowY + ROW_HEIGHT / 2 - renderer.text.lineHeight(size) / 2, size,
-                AccentWave.wave(ClickGuiStyle.text(), active ? 1 : 0));
-    }
-
-    private void card(Renderer2D renderer, float rowY, int color) {
-        renderer.sdf.roundedRect(x + CARD_INSET, rowY + CARD_INSET, width - CARD_INSET * 2, ROW_HEIGHT - CARD_INSET * 2,
-                ClickGuiStyle.CARD_RADIUS, color);
-    }
-
-    private void label(Renderer2D renderer, String label, float labelX, float rowY, TextRenderer.ColorFunction color) {
-        renderer.text.drawColored(label, labelX, renderer.text.topInBox(rowY + (ROW_HEIGHT - 14) / 2, 14, LABEL_SIZE),
-                LABEL_SIZE, color);
+        boolean active = config.equals(loaded);
+        int color = active ? ARGB.opaque(ThemeColors.primary()) : mix(textColor(), ClickGuiStyle.MODULE_HOVER, hover);
+        label(renderer, fitLabel(renderer, config, FONT, right - x - EDGE - 4), x + EDGE, rowY + ROW_HEIGHT / 2, FONT, color);
     }
 
     private float hover(String id, boolean hovered) {
@@ -173,7 +181,7 @@ public final class ConfigPanel {
     public boolean mouseClicked(float mouseX, float mouseY, int button) {
         if (button != InputConstants.MOUSE_BUTTON_LEFT || !contains(mouseX, mouseY, x, y, width, height)) return false;
         if (contains(mouseX, mouseY, x, y, width, ROW_HEIGHT)) {
-            if (mouseX >= createLeft - LABEL_GAP / 2) {
+            if (mouseX >= createLeft - 4) {
                 String value = name.getValue().strip();
                 if (!value.isEmpty() && !configs.contains(value)) run("save", value);
                 return true;
@@ -191,14 +199,13 @@ public final class ConfigPanel {
         if (index < 0 || index >= configs.size()) return true;
         String config = configs.get(index);
         for (String action : ACTIONS) {
-            SpringAnimation hover = hovers.get(action + ":" + config);
-            if (hover != null && hover.value() > 0.5f) {
-                run(action, config);
+            float[] bounds = actionBounds.get(action + ":" + config);
+            if (bounds != null && mouseX >= bounds[0] && mouseX < bounds[0] + bounds[1]) {
+                run(action.equals("Save") ? "save" : "delete", config);
                 return true;
             }
         }
-        selected = config;
-        name.setValue(config);
+        run("load", config);
         return true;
     }
 
@@ -209,21 +216,17 @@ public final class ConfigPanel {
     }
 
     public boolean keyPressed(KeyEvent event) {
+        if (!focused) return false;
         if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
-            if (focused) {
-                String value = name.getValue().strip();
-                if (!value.isEmpty() && !configs.contains(value)) run("save", value);
-            } else if (!selected.isEmpty()) {
-                run("load", selected);
-            }
+            String value = name.getValue().strip();
+            if (!value.isEmpty() && !configs.contains(value)) run("save", value);
             return true;
         }
         if (event.key() == InputConstants.KEY_ESCAPE) {
-            if (!focused) return false;
             unfocus();
             return true;
         }
-        if (focused && name.keyPressed(event)) {
+        if (name.keyPressed(event)) {
             text.edited();
             return true;
         }
@@ -246,8 +249,11 @@ public final class ConfigPanel {
                 case "delete" -> Paradox.CONFIGS.delete(config);
                 default -> throw new IllegalArgumentException("Unknown config action");
             }
-            selected = action.equals("delete") ? "" : config;
-            if (action.equals("delete") && name.getValue().strip().equals(config)) name.setValue("");
+            if (action.equals("delete")) {
+                if (loaded.equals(config)) loaded = "";
+            } else {
+                loaded = config;
+            }
             if (action.equals("save")) name.setValue("");
             refresh();
             message((action.equals("save") ? "Saved " : action.equals("load") ? "Loaded " : "Deleted ") + config, false);
@@ -280,12 +286,5 @@ public final class ConfigPanel {
 
     private static boolean contains(float mouseX, float mouseY, float x, float y, float width, float height) {
         return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
-    }
-
-    private static String fit(Renderer2D renderer, String text, float width, float size) {
-        if (renderer.text.measure(text, size).width() <= width) return text;
-        int end = text.length();
-        while (end > 0 && renderer.text.measure(text.substring(0, end) + "…", size).width() > width) end--;
-        return text.substring(0, end) + "…";
     }
 }

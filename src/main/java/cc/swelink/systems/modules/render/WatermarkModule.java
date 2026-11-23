@@ -195,7 +195,7 @@ public final class WatermarkModule extends Module implements PlacedHudElement {
                             float iconSize = segment.iconSize();
                             float iconX = box.x() + PADDING;
                             float iconY = box.y() + (HEIGHT - iconSize) / 2;
-                            renderer.textures.icon(Paradox.id("icons/" + segment.icon + ".png"),
+                            renderer.textures.icon(Paradox.id("icons/hud/" + segment.icon + ".png"),
                                     iconX, iconY, iconSize, AccentWave.text());
                             float textX = iconX + iconSize + ICON_GAP;
                             if (segment.icon.equals("fps")) {

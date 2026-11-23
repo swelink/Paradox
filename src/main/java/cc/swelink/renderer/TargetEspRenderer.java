@@ -31,7 +31,7 @@ import java.util.Optional;
 
 public final class TargetEspRenderer {
     private static final int HURT_COLOR = 0xFFFF5252;
-    private static final Identifier CROSSHAIR = Paradox.id("icons/crosshair.png");
+    private static final Identifier CROSSHAIR = Paradox.id("icons/hud/crosshair.png");
     private static final RenderType CROSSHAIR_RENDER_TYPE = RenderType.create("paradox_target_crosshair",
             RenderSetup.builder(RenderPipeline.builder()
                     .withLocation(Paradox.id("pipeline/target_crosshair"))

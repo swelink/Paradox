@@ -114,7 +114,7 @@ public final class SpeedGraphModule extends Module implements PlacedHudElement {
                 renderer.blur.frostedGlassWithHeader(renderer, Glass.HUD, x, y, WIDTH, HEIGHT, RADIUS, ThemeColors.hudPanel(), HEADER_HEIGHT,
                         ThemeColors.hudHeader(), edges);
                 int accent = ThemeColors.primary();
-                renderer.textures.icon(Paradox.id("icons/flash.png"), x + PADDING,
+                renderer.textures.icon(Paradox.id("icons/hud/flash.png"), x + PADDING,
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 var title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
                 title.draw("Speed", x + PADDING + ICON_SIZE + ICON_GAP,

@@ -209,7 +209,7 @@ public final class TargetHudModule extends Module implements PlacedHudElement {
         float beat = (float) Math.sin(beatProgress * Math.PI * 2);
         float pulsingHeartSize = heartSize * (1 + 0.4f * beat * beat * (1 - beatProgress));
         float heartOffset = (pulsingHeartSize - heartSize) / 2;
-        renderer.textures.icon(Paradox.id("icons/heart.png"), contentX - heartOffset, heartY - heartOffset,
+        renderer.textures.icon(Paradox.id("icons/hud/heart.png"), contentX - heartOffset, heartY - heartOffset,
                 pulsingHeartSize, AccentWave.text(DAMAGE_COLOR, 1 - hurt));
         float displayedHealth = Math.round(health * player.getMaxHealth() * 10) / 10f;
         String healthText = displayedHealth == Math.round(displayedHealth)

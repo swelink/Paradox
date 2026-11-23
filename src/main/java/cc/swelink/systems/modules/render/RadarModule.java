@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 public final class RadarModule extends Module {
-    private static final Identifier ARROW = Paradox.id("icons/arrow.png");
+    private static final Identifier ARROW = Paradox.id("icons/hud/arrow.png");
     private final IntSetting radius = addSetting(new IntSetting("Radius", 120, 40, 240));
     private final IntSetting arrowSize = addSetting(new IntSetting("Arrow size", 14, 6, 24));
     private final IntSetting range = addSetting(new IntSetting("Range", 128, 16, 512));

@@ -147,7 +147,7 @@ public final class EffectsModule extends Module implements PlacedHudElement {
             renderer.blur.frostedGlassWithHeader(renderer, Glass.HUD, x, y, width, height, CORNER_RADIUS,
                     ThemeColors.hudPanel(), HEADER_HEIGHT, ThemeColors.hudHeader(), edges);
             try (var panelClip = renderer.clips.push(x, y, width, height)) {
-                renderer.textures.icon(Paradox.id("icons/effect.png"), x + PADDING,
+                renderer.textures.icon(Paradox.id("icons/hud/effect.png"), x + PADDING,
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 title.draw("Effects", x + PADDING + ICON_SIZE + ICON_GAP,
                         y + (HEADER_HEIGHT - title.lineHeight(TITLE_SIZE)) / 2, TITLE_SIZE, ThemeColors.text());

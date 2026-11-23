@@ -119,7 +119,7 @@ public final class KeybindHudModule extends Module implements PlacedHudElement {
             renderer.blur.frostedGlassWithHeader(renderer, Glass.HUD, x, y, width, height, RADIUS, ThemeColors.hudPanel(), HEADER_HEIGHT, ThemeColors.hudHeader(),
                     edges);
             try (var panelClip = renderer.clips.push(x, y, width, height)) {
-                renderer.textures.icon(Paradox.id("icons/keybind.png"), x + PADDING,
+                renderer.textures.icon(Paradox.id("icons/hud/keybind.png"), x + PADDING,
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 title.draw("Keybinds", x + PADDING + ICON_SIZE + ICON_GAP,
                         y + (HEADER_HEIGHT - title.lineHeight(TITLE_SIZE)) / 2, TITLE_SIZE, ThemeColors.text());

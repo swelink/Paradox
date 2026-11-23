@@ -46,8 +46,6 @@ final class Pipelines {
             Paradox.id("core/color_field"), SDF_FORMAT, RenderPipelines.GUI);
     static final RenderPipeline HUE_BAR = gui("hue_bar", Paradox.id("core/rounded_texture"),
             Paradox.id("core/hue_bar"), SDF_FORMAT, RenderPipelines.GUI);
-    static final RenderPipeline ESP_PREVIEW = gui("esp_preview", Paradox.id("core/sdf"),
-            Paradox.id("core/esp_preview"), SDF_FORMAT, RenderPipelines.GUI_TEXTURED);
 
     private static RenderPipeline gui(String name, Identifier vertex, Identifier fragment, VertexFormat format, RenderPipeline base) {
         var builder = RenderPipeline.builder().withLocation(Paradox.id("pipeline/" + name))

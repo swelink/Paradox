@@ -1,8 +1,6 @@
 package cc.swelink.mixin;
 
 import cc.swelink.renderer.BlurRenderer;
-import cc.swelink.renderer.EspPreviewRenderState;
-import cc.swelink.renderer.EspPreviewRenderer;
 import cc.swelink.renderer.TextRenderer;
 import cc.swelink.renderer.UniformGuiFade;
 
@@ -12,22 +10,17 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 
 import net.minecraft.client.gui.render.GuiRenderer;
-import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
-import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.function.Consumer;
@@ -45,17 +38,6 @@ public abstract class GuiRendererMixin {
 
     @Unique
     private final TreeMap<Integer, Consumer<RenderTarget>> paradox$captures = new TreeMap<>();
-
-    @Shadow
-    @Final
-    @Mutable
-    private Map<Class<? extends PictureInPictureRenderState>, PictureInPictureRenderer<?>> pictureInPictureRenderers;
-
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void paradox$registerEspPreview(CallbackInfo ci) {
-        pictureInPictureRenderers = new HashMap<>(pictureInPictureRenderers);
-        pictureInPictureRenderers.put(EspPreviewRenderState.class, new EspPreviewRenderer());
-    }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void paradox$prepareBlur(CallbackInfo ci) {

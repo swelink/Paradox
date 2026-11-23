@@ -7,7 +7,6 @@ import cc.swelink.events.OverlayRenderEvent;
 import cc.swelink.settings.BooleanSetting;
 import cc.swelink.renderer.ThemeColors;
 import cc.swelink.settings.ModeSetting;
-import cc.swelink.settings.PlayerPreviewSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.systems.modules.render.esp.mode.EspMode;
@@ -35,7 +34,6 @@ public final class EspModule extends Module {
         for (var setting : shader.settings()) {
             addSetting(setting);
         }
-        addSetting(new PlayerPreviewSetting(this));
         mode.onChanged(ignored -> changeMode());
     }
 

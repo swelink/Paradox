@@ -15,26 +15,6 @@ public final class ShaderEsp extends EspMode {
         settings = new OutlineShaderSettings(this::add, () -> module.selected(this));
     }
 
-    public int waveMode() {
-        return settings.waveMode();
-    }
-
-    public int width() {
-        return settings.width();
-    }
-
-    public float fill() {
-        return settings.fill();
-    }
-
-    public int shape() {
-        return settings.shape();
-    }
-
-    public int glow() {
-        return settings.glow();
-    }
-
     public void configure(PostChain chain) {
         if (chain != null && POST_EFFECT.equals(chain.id())) {
             settings.configure(chain);

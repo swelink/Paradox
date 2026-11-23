@@ -25,7 +25,6 @@ import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.resources.Identifier;
 
 import org.joml.Matrix3x2fc;
-import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 import java.util.ArrayList;
@@ -110,7 +109,7 @@ public final class BlurRenderer implements AutoCloseable {
         if (!Renderer2D.drawable(x, y, width, height) || (tint >>> 24) == 0) {
             return;
         }
-        Request request = request(renderer, downsample, passes, x, y, width, height);
+        Request request = request(renderer, downsample, passes, pipeline == Pipelines.FROSTED_GLASS);
         Supplier<TextureSetup> texture = () -> textureSetup(request);
         float clampedRadius = Math.min(SdfPipeline.corner(radius, width, height), 127);
         int encodedRadius = Math.round(clampedRadius * 16) | (edges & 15) << 11;
@@ -143,7 +142,7 @@ public final class BlurRenderer implements AutoCloseable {
             fillet[i] = halfUnits(Math.min(fillets[i], height));
             spread = Math.max(spread, fillet[i] / 2f);
         }
-        Request request = request(renderer, Glass.HUD.downsample, Glass.HUD.passes, x, y, width, height);
+        Request request = request(renderer, Glass.HUD.downsample, Glass.HUD.passes, true);
         Supplier<TextureSetup> texture = () -> textureSetup(request);
         int first = 0x8000 | fillet[2] | fillet[3] << 5 | (verticalFillets & 15) << 10;
         int second = radius[0] | radius[1] << 5 | radius[2] << 10;
@@ -182,7 +181,7 @@ public final class BlurRenderer implements AutoCloseable {
     }
 
     public synchronized void backdrop(Renderer2D renderer, float x, float y, float width, float height, int downsample, int passes, int tint) {
-        Request request = request(renderer, downsample, passes, x, y, width, height);
+        Request request = request(renderer, downsample, passes);
         float u0 = x / renderer.graphics.guiWidth();
         float v0 = 1 - y / renderer.graphics.guiHeight();
         float u1 = (x + width) / renderer.graphics.guiWidth();
@@ -195,16 +194,16 @@ public final class BlurRenderer implements AutoCloseable {
         });
     }
 
-    private Request request(Renderer2D renderer, int downsample, int passes, float x, float y, float width, float height) {
-        var pose = renderer.graphics.pose();
-        var from = pose.transformPosition(x, y, new Vector2f());
-        var to = pose.transformPosition(x + width, y + height, new Vector2f());
-        float[] area = {Math.min(from.x, to.x), Math.min(from.y, to.y), Math.max(from.x, to.x), Math.max(from.y, to.y)};
-        return mark(renderer.graphics, downsample, passes, area);
+    private Request request(Renderer2D renderer, int downsample, int passes) {
+        return request(renderer, downsample, passes, false);
+    }
+
+    private Request request(Renderer2D renderer, int downsample, int passes, boolean frosted) {
+        return mark(renderer.graphics, downsample, passes);
     }
 
     public static synchronized void group(Renderer2D renderer) {
-        mark(renderer.graphics, Glass.HUD.downsample, Glass.HUD.passes, null);
+        mark(renderer.graphics, Glass.HUD.downsample, Glass.HUD.passes);
     }
 
     public static synchronized void endGroup(Renderer2D renderer) {
@@ -215,19 +214,15 @@ public final class BlurRenderer implements AutoCloseable {
         OPEN.remove(GuiGraphicsAccess.of(graphics).paradox$renderState());
     }
 
-    private static synchronized Request mark(GuiGraphicsExtractor graphics, int downsample, int passes, float[] area) {
+    private static synchronized Request mark(GuiGraphicsExtractor graphics, int downsample, int passes) {
         closing = false;
         if (!PostProcessingModule.active()) return DISABLED;
         GuiRenderState state = GuiGraphicsAccess.of(graphics).paradox$renderState();
         int clampedDownsample = Math.clamp(downsample, 1, 8);
         int clampedPasses = Math.clamp(passes, 0, 8);
         Request open = OPEN.get(state);
-        if (open != null && open.downsample == clampedDownsample && open.passes == clampedPasses && !open.overlaps(area)) {
-            if (area != null) open.areas.add(area);
-            return open;
-        }
+        if (open != null && open.downsample == clampedDownsample && open.passes == clampedPasses) return open;
         Request request = new Request(clampedDownsample, clampedPasses);
-        if (area != null) request.areas.add(area);
         OPEN.put(state, request);
         FRAMES.computeIfAbsent(state, key -> new ArrayList<>()).add(request);
         graphics.nextStratum();
@@ -338,7 +333,6 @@ public final class BlurRenderer implements AutoCloseable {
     private static final class Request {
         final int downsample;
         final int passes;
-        final List<float[]> areas = new ArrayList<>();
         TextureTarget first;
         TextureTarget second;
         GpuTextureView result;
@@ -346,14 +340,6 @@ public final class BlurRenderer implements AutoCloseable {
         Request(int downsample, int passes) {
             this.downsample = downsample;
             this.passes = passes;
-        }
-
-        boolean overlaps(float[] area) {
-            if (area == null) return false;
-            for (float[] drawn : areas) {
-                if (area[0] < drawn[2] && drawn[0] < area[2] && area[1] < drawn[3] && drawn[1] < area[3]) return true;
-            }
-            return false;
         }
     }
 

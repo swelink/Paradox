@@ -4,6 +4,7 @@ import cc.swelink.events.EventHandler;
 import cc.swelink.events.OverlayRenderEvent;
 import cc.swelink.renderer.DigitAnimation;
 import cc.swelink.renderer.DistanceScale;
+import cc.swelink.renderer.BlurRenderer;
 import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.ThemeColors;
@@ -202,6 +203,7 @@ public final class NametagsModule extends Module {
     }
 
     private void drawPanel(Renderer2D renderer, float left, float top, float width) {
+        BlurRenderer.endGroup(renderer);
         if (shadows.get()) {
             HudBackdrop.draw(renderer, List.of(new HudBackdrop.Background(left, top, width, HEIGHT, CORNER_RADIUS)));
         }

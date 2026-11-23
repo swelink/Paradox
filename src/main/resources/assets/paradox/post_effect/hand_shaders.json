@@ -246,13 +246,6 @@
           "sampler_name": "Glow",
           "target": "glow_vertical",
           "bilinear": true
-        },
-        {
-          "sampler_name": "Glyphs",
-          "location": "paradox:matrix_glyphs",
-          "width": 512,
-          "height": 288,
-          "bilinear": true
         }
       ],
       "output": "glow_composite",
@@ -272,38 +265,6 @@
         "HandColor": [
           {
             "name": "Tint",
-            "type": "vec4",
-            "value": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        ],
-        "FillWave": [
-          {
-            "name": "Wave",
-            "type": "vec4",
-            "value": [
-              1.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          {
-            "name": "PrimaryAccent",
-            "type": "vec4",
-            "value": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ]
-          },
-          {
-            "name": "SecondaryAccent",
             "type": "vec4",
             "value": [
               1.0,

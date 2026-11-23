@@ -30,6 +30,10 @@ public abstract class BlockInteractionController<T extends BlockInteractionContr
         BlockHitResult hit();
         Vec3 aim();
         Item item();
+
+        default int slot() {
+            return -1;
+        }
     }
 
     private final IntSetting placeDelay = new IntSetting("Place delay", 1, 0, 20);
@@ -219,7 +223,7 @@ public abstract class BlockInteractionController<T extends BlockInteractionContr
             return;
         }
         if (ticks < nextPlace || ticks - switchTick < switchDelay.get()
-                || !client.player.getMainHandItem().is(target.item())) {
+                || !holding(client, target)) {
             return;
         }
         var camera = new Rotation(client.player.getYRot(), client.player.getXRot());
@@ -256,6 +260,15 @@ public abstract class BlockInteractionController<T extends BlockInteractionContr
         restorePending = restoreAfterUse();
     }
 
+    private boolean holding(Minecraft client, T target) {
+        return target.slot() >= 0 ? client.player.getInventory().getSelectedSlot() == target.slot()
+                : client.player.getMainHandItem().is(target.item());
+    }
+
+    private int slotFor(Minecraft client, T target) {
+        return target.slot() >= 0 ? target.slot() : InventoryUtils.findHotbar(client.player.getInventory(), target.item());
+    }
+
     private boolean prepare(Minecraft client) {
         if (!active(client)) {
             return false;
@@ -271,10 +284,10 @@ public abstract class BlockInteractionController<T extends BlockInteractionContr
             return false;
         }
         if (originalSlot >= 0) {
-            if (client.player.getMainHandItem().is(target.item())) {
+            if (holding(client, target)) {
                 return true;
             }
-            int next = InventoryUtils.findHotbar(client.player.getInventory(), target.item());
+            int next = slotFor(client, target);
             if (next < 0 || restoreAfterUse()) {
                 restore(client);
                 return false;
@@ -285,7 +298,7 @@ public abstract class BlockInteractionController<T extends BlockInteractionContr
             switchTick = ticks;
             return true;
         }
-        int slot = InventoryUtils.findHotbar(client.player.getInventory(), target.item());
+        int slot = slotFor(client, target);
         var inventory = client.player.getInventory();
         if (slot < 0 || !SlotSelection.begin(owner, inventory)) {
             target = null;

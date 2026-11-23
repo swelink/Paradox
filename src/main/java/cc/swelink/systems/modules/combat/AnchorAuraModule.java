@@ -87,8 +87,11 @@ public final class AnchorAuraModule extends Module {
     private float potential;
     private int potentialTick = -1;
 
-    private record Target(BlockPos position, BlockHitResult hit, Vec3 aim, Item item, boolean placing)
+    private record Target(BlockPos position, BlockHitResult hit, Vec3 aim, Item item, boolean placing, int slot)
             implements BlockInteractionController.BlockTarget {
+        Target(BlockPos position, BlockHitResult hit, Vec3 aim, Item item, boolean placing) {
+            this(position, hit, aim, item, placing, -1);
+        }
     }
 
     public AnchorAuraModule() {
@@ -175,7 +178,7 @@ public final class AnchorAuraModule extends Module {
         var safeAnchor = Paradox.MODULES.get(SafeAnchorModule.class);
         if (safeAnchor.busy(client) || !safeAnchor.allowsDetonation(client, anchor)
                 || player.tickCount - chargedAt < explodeDelay.get()) return null;
-        return new Target(anchor, hit, hit.getLocation(), item, false);
+        return new Target(anchor, hit, hit.getLocation(), item, false, explodeSlot.get() - 1);
     }
 
     static Player closestEnemy(Minecraft client, boolean throughWalls) {

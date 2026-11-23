@@ -8,27 +8,11 @@ public final class HudBackdrop {
             new Shadow(12, 0x94000000),
             new Shadow(4, 0x88000000));
     private static final float PADDING = 56;
-    private static final float DOCKED_OVERHANG = 40;
 
     private HudBackdrop() {
     }
 
-    public record Background(float x, float y, float width, float height, float radius, float[] corners) {
-        public Background(float x, float y, float width, float height, float radius) {
-            this(x, y, width, height, radius, null);
-        }
-
-        public Background withCorners(float[] value) {
-            return new Background(x, y, width, height, radius, value);
-        }
-    }
-
-    public static Background docked(float x, float y, float width, float height, float radius, int edges) {
-        float left = x - ((edges & BlurRenderer.LEFT) != 0 ? DOCKED_OVERHANG : 0);
-        float top = y - ((edges & BlurRenderer.TOP) != 0 ? DOCKED_OVERHANG : 0);
-        float right = x + width + ((edges & BlurRenderer.RIGHT) != 0 ? DOCKED_OVERHANG : 0);
-        float bottom = y + height + ((edges & BlurRenderer.BOTTOM) != 0 ? DOCKED_OVERHANG : 0);
-        return new Background(left, top, right - left, bottom - top, radius);
+    public record Background(float x, float y, float width, float height, float radius) {
     }
 
     public static void draw(Renderer2D renderer, List<Background> backgrounds) {
@@ -48,7 +32,7 @@ public final class HudBackdrop {
             if (cutout == background || !(cutout.width > 0 && cutout.height > 0)) {
                 continue;
             }
-            float corner = cornerSize(cutout);
+            float corner = SdfPipeline.corner(cutout.radius, cutout.width, cutout.height);
             for (Region shape : List.of(
                     new Region(cutout.x, cutout.y + corner, cutout.x + cutout.width, cutout.y + cutout.height - corner),
                     new Region(cutout.x + corner, cutout.y, cutout.x + cutout.width - corner, cutout.y + cutout.height))) {
@@ -62,22 +46,10 @@ public final class HudBackdrop {
         }
         for (Region region : outside) {
             for (Shadow shadow : SHADOWS) {
-                if (background.corners != null) {
-                    renderer.sdf.clippedBackdropShadow(background.x, background.y, background.width, background.height,
-                            background.corners, shadow.sigma, shadow.color, region.left, region.top, region.right, region.bottom);
-                } else {
-                    renderer.sdf.clippedBackdropShadow(background.x, background.y, background.width, background.height,
-                            background.radius, shadow.sigma, shadow.color, region.left, region.top, region.right, region.bottom);
-                }
+                renderer.sdf.clippedBackdropShadow(background.x, background.y, background.width, background.height,
+                        background.radius, shadow.sigma, shadow.color, region.left, region.top, region.right, region.bottom);
             }
         }
-    }
-
-    private static float cornerSize(Background background) {
-        if (background.corners == null) return SdfPipeline.corner(background.radius, background.width, background.height);
-        float corner = 0;
-        for (float value : background.corners) corner = Math.max(corner, value);
-        return Math.clamp(corner, 0, Math.min(background.width, background.height) * 0.5f);
     }
 
     private record Shadow(float sigma, int color) {

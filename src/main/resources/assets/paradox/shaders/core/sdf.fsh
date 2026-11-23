@@ -104,8 +104,7 @@ void main() {
     vec2 q=abs(localPosition-size*0.5)-(size*0.5-params.x);
     float distance=length(max(q,0.0))+min(max(q.x,q.y),0.0)-params.x;
     float aa=max(fwidth(distance),0.0001);
-    bool cornerShadow = params.w == 8.0;
-    bool backdropShadow = params.w == 5.0 || cornerShadow;
+    bool backdropShadow = params.w == 5.0;
     float coverage=1.0-smoothstep(-aa*0.5,aa*0.5,distance);
     if(params.w==4.0) coverage=1.0-coverage;
     if(params.w==1.0) coverage*=smoothstep(-params.y-aa*0.5,-params.y+aa*0.5,distance);
@@ -113,14 +112,7 @@ void main() {
     if (blurredFill) {
         float sigma = max(params.z, 0.001);
         vec2 point = localPosition - (backdropShadow ? vec2(0.0, sigma * 0.45) : vec2(0.0));
-        vec4 radii = vec4(params.x);
-        if (cornerShadow) {
-            int first = int(params.x * 16.0 + 0.5);
-            int second = int(params.y * 16.0 + 0.5);
-            radii = vec4(first & 31, (first >> 5) & 31, (first >> 10) & 31, second & 31) * 0.5;
-            radii = min(radii, vec4(min(size.x, size.y) * 0.5));
-        }
-        coverage = roundedGaussian(point, size, radii, sigma);
+        coverage = roundedGaussian(point, size, vec4(params.x), sigma);
     }
     fragColor=vertexColor*ColorModulator;
     fragColor.a*=coverage;

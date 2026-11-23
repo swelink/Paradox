@@ -4,7 +4,6 @@ import cc.swelink.Paradox;
 import cc.swelink.gui.screens.MenuText;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.Glass;
-import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.Renderer2D;
@@ -12,7 +11,6 @@ import cc.swelink.renderer.SpringAnimation;
 import cc.swelink.renderer.TextRenderer;
 import cc.swelink.renderer.ThemeColors;
 import cc.swelink.renderer.PixelSnap;
-import cc.swelink.settings.BooleanSetting;
 import cc.swelink.systems.hud.PlacedHudElement;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
@@ -20,7 +18,6 @@ import cc.swelink.utils.hud.HudPlacement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
-import java.util.List;
 
 public final class InventoryHudModule extends Module implements PlacedHudElement {
     private static final int COLUMNS = 9;
@@ -35,7 +32,6 @@ public final class InventoryHudModule extends Module implements PlacedHudElement
     private static final float ICON_SIZE = 18;
     private static final float ICON_GAP = 7;
     private static final float RADIUS = 10;
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final HudPlacement placement = new HudPlacement(1, 0.2f, false).withCenterSnap();
     private final SpringAnimation visibility = new SpringAnimation();
     private final FrameClock clock = new FrameClock();
@@ -70,7 +66,6 @@ public final class InventoryHudModule extends Module implements PlacedHudElement
             try (var renderer = new Renderer2D(graphics)) {
                 renderer.opacity(reveal);
                 int edges = placement.touchedEdges();
-                if (shadows.get()) HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(x, y, WIDTH, HEIGHT, RADIUS, edges)));
                 renderer.blur.frostedGlassWithHeader(renderer, Glass.HUD, x, y, WIDTH, HEIGHT, RADIUS, ThemeColors.hudPanel(), HEADER_HEIGHT,
                         ThemeColors.hudHeader(), edges);
                 renderer.textures.icon(Paradox.id("icons/hud/inventory.png"), x + PADDING,

@@ -4,7 +4,6 @@ import cc.swelink.Paradox;
 import cc.swelink.renderer.DigitAnimation;
 import cc.swelink.renderer.Glass;
 import cc.swelink.renderer.FrameClock;
-import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.Renderer2D;
@@ -12,7 +11,6 @@ import cc.swelink.renderer.SdfPipeline;
 import cc.swelink.renderer.SpringAnimation;
 import cc.swelink.renderer.TextRenderer;
 import cc.swelink.renderer.ThemeColors;
-import cc.swelink.settings.BooleanSetting;
 import cc.swelink.systems.hud.PlacedHudElement;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
@@ -24,7 +22,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import net.minecraft.util.ARGB;
 
@@ -43,7 +40,6 @@ public final class SpeedGraphModule extends Module implements PlacedHudElement {
     private static final float LINE_WIDTH = 1.6f;
     private static final float SMOOTHING = 0.3f;
     private static final long VALUE_INTERVAL = 50_000_000L;
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final HudPlacement placement = new HudPlacement(0, 0.6f, false).withCenterSnap();
     private final SpringAnimation visibility = new SpringAnimation();
     private final SpringAnimation ceiling = new SpringAnimation(1);
@@ -110,7 +106,6 @@ public final class SpeedGraphModule extends Module implements PlacedHudElement {
             try (var renderer = new Renderer2D(graphics)) {
                 renderer.opacity(reveal);
                 int edges = placement.touchedEdges();
-                if (shadows.get()) HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(x, y, WIDTH, HEIGHT, RADIUS, edges)));
                 renderer.blur.frostedGlassWithHeader(renderer, Glass.HUD, x, y, WIDTH, HEIGHT, RADIUS, ThemeColors.hudPanel(), HEADER_HEIGHT,
                         ThemeColors.hudHeader(), edges);
                 int accent = ThemeColors.primary();

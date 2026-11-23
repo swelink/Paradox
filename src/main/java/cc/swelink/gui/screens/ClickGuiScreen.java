@@ -9,7 +9,6 @@ import static cc.swelink.gui.screens.ClickGuiDraw.mix;
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.GuiViewport;
-import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.SpringAnimation;
 import cc.swelink.renderer.TextRenderer;
@@ -29,7 +28,6 @@ import cc.swelink.systems.hud.HudElement;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.systems.modules.ModuleManager;
-import cc.swelink.systems.modules.client.ClickGuiModule;
 import cc.swelink.systems.modules.combat.AutoAnchorModule;
 import cc.swelink.systems.modules.render.DynamicIslandModule;
 import cc.swelink.systems.modules.render.PostProcessingModule;
@@ -405,9 +403,6 @@ public class ClickGuiScreen extends Screen {
         float height = HEADER_HEIGHT + body;
         renderer.opacity(opacity);
         try {
-            if (manager.get(ClickGuiModule.class).shadows()) {
-                HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, 0)));
-            }
             renderer.sdf.roundedRect(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, bodyColor());
             renderer.sdf.clippedRoundedRect(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, ClickGuiStyle.PANEL_HEADER,
                     panel.x, top, panel.x + PANEL_WIDTH, panel.y);

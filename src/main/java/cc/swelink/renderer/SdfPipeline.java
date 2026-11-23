@@ -14,7 +14,6 @@ public final class SdfPipeline {
     private static final int BACKDROP_SHADOW = 5;
     private static final int DOCKED_BORDER = 6;
     private static final int DOCKED_FILL = 7;
-    private static final int CORNER_BACKDROP_SHADOW = 8;
     private static final int FIXED_POINT_SCALE = 16;
     private static final float ROUNDNESS = 0.95f;
     private static final float MIN_CORNER = 5;
@@ -215,32 +214,6 @@ public final class SdfPipeline {
         if (sigma > 0) {
             shape(x, y, width, height, corner(radius, width, height), 0, sigma, color, BACKDROP_SHADOW, left, top, right, bottom);
         }
-    }
-
-    public void clippedBackdropShadow(float x, float y, float width, float height, float[] corners, float sigma, int color,
-                                      float left, float top, float right, float bottom) {
-        if (!(sigma > 0) || !Renderer2D.drawable(x, y, width, height) || (color >>> 24) == 0) {
-            return;
-        }
-        int first = half(corners[0]) | half(corners[1]) << 5 | half(corners[2]) << 10;
-        int second = half(corners[3]);
-        int encodedSigma = fixed(sigma);
-        float padding = sigma * 4.5f + 2;
-        float x1 = Math.max(x - padding, left);
-        float y1 = Math.max(y - padding, top);
-        float x2 = Math.min(x + width + padding, right);
-        float y2 = Math.min(y + height + padding, bottom);
-        if (!(x2 > x1 && y2 > y1)) return;
-        renderer.submit(Pipelines.SDF, TextureSetup.noTexture(), x1, y1, x2 - x1, y2 - y1, (vertices, pose) -> {
-            vertex(vertices, pose, x1, y1, x1 - x, y1 - y, width, height, first, second, encodedSigma, CORNER_BACKDROP_SHADOW, color);
-            vertex(vertices, pose, x1, y2, x1 - x, y2 - y, width, height, first, second, encodedSigma, CORNER_BACKDROP_SHADOW, color);
-            vertex(vertices, pose, x2, y2, x2 - x, y2 - y, width, height, first, second, encodedSigma, CORNER_BACKDROP_SHADOW, color);
-            vertex(vertices, pose, x2, y1, x2 - x, y1 - y, width, height, first, second, encodedSigma, CORNER_BACKDROP_SHADOW, color);
-        });
-    }
-
-    private static int half(float value) {
-        return Math.clamp(Math.round(value * 2), 0, 31);
     }
 
     private void shape(float x, float y, float width, float height, float radius, float border, float sigma, int color, int shapeType) {

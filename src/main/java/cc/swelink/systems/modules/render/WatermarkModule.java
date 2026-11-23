@@ -45,7 +45,6 @@ public final class WatermarkModule extends Module implements PlacedHudElement {
     private final BooleanSetting fps = addSetting(new BooleanSetting("FPS", true));
     private final BooleanSetting latency = addSetting(new BooleanSetting("Latency", true));
     private final BooleanSetting time = addSetting(new BooleanSetting("Time", true));
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final FrameClock clock = new FrameClock();
     private final HudRevealAnimation fpsAnimation = new HudRevealAnimation();
     private final HudRevealAnimation latencyAnimation = new HudRevealAnimation();
@@ -157,8 +156,6 @@ public final class WatermarkModule extends Module implements PlacedHudElement {
                 preceding = Math.max(preceding, amount);
             }
             int edges = placement.touchedEdges();
-            if (shadows.get()) HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(placement.x(), placement.y(), width, height,
-                    CORNER_RADIUS, edges)));
             renderer.blur.frostedGlass(renderer, Glass.HUD, placement.x(), placement.y(), width, height, CORNER_RADIUS,
                     ThemeColors.hudPanel(), edges);
             preceding = 0;

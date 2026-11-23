@@ -4,7 +4,6 @@ import cc.swelink.Paradox;
 import cc.swelink.renderer.DigitAnimation;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.Glass;
-import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.Renderer2D;
@@ -12,7 +11,6 @@ import cc.swelink.renderer.SpringAnimation;
 import cc.swelink.renderer.TextRenderer;
 import cc.swelink.renderer.ThemeColors;
 import cc.swelink.renderer.PixelSnap;
-import cc.swelink.settings.BooleanSetting;
 import cc.swelink.systems.hud.PlacedHudElement;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
@@ -29,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 public final class EffectsModule extends Module implements PlacedHudElement {
@@ -46,7 +43,6 @@ public final class EffectsModule extends Module implements PlacedHudElement {
     private static final float TITLE_SIZE = 15;
     private static final float CORNER_RADIUS = 10;
     private static final int MUTED_TEXT = 0xFFB8B7BE;
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final HudPlacement placement = new HudPlacement(1, 0.35f, false).withCenterSnap();
     private final SpringAnimation visibility = new SpringAnimation();
     private final SpringAnimation widthMotion = new SpringAnimation();
@@ -141,9 +137,6 @@ public final class EffectsModule extends Module implements PlacedHudElement {
             renderer.opacity(reveal);
             HudPopAnimation.pop(pose, reveal, x, y, width, height, placement.touchedEdges());
             int edges = placement.touchedEdges();
-            if (shadows.get()) {
-                HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(x, y, width, height, CORNER_RADIUS, edges)));
-            }
             renderer.blur.frostedGlassWithHeader(renderer, Glass.HUD, x, y, width, height, CORNER_RADIUS,
                     ThemeColors.hudPanel(), HEADER_HEIGHT, ThemeColors.hudHeader(), edges);
             try (var panelClip = renderer.clips.push(x, y, width, height)) {

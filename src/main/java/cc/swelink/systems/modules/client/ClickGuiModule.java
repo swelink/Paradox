@@ -3,7 +3,6 @@ package cc.swelink.systems.modules.client;
 import cc.swelink.gui.screens.ClickGuiScreen;
 import cc.swelink.gui.screens.HudEditorScreen;
 import cc.swelink.renderer.Theme;
-import cc.swelink.settings.BooleanSetting;
 import cc.swelink.settings.ModeSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
@@ -30,8 +29,6 @@ import java.util.Arrays;
 public class ClickGuiModule extends Module {
     private final ModeSetting theme = addSetting(new ModeSetting("Theme", Theme.PARADOX.title,
             Arrays.stream(Theme.values()).map(value -> value.title).toArray(String[]::new)));
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
-    private final BooleanSetting islandShadows = addSetting(new BooleanSetting("Island shadows", true));
     private final ClickGuiScreen screen;
     private final ModuleManager manager;
     private boolean returning;
@@ -104,14 +101,6 @@ public class ClickGuiModule extends Module {
     }
 
 
-
-    public boolean shadows() {
-        return shadows.get();
-    }
-
-    public boolean islandShadows() {
-        return islandShadows.get();
-    }
 
     public Theme theme() {
         return Theme.named(theme.get());

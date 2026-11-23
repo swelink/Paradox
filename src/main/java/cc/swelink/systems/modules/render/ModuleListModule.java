@@ -3,7 +3,6 @@ package cc.swelink.systems.modules.render;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.BlurRenderer;
-import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.SpringAnimation;
@@ -45,7 +44,6 @@ public final class ModuleListModule extends Module implements PlacedHudElement {
     private static final Set<String> EMPTY_CHOICES = Set.of("off", "none", "disabled");
     private final BooleanSetting modes = addSetting(new BooleanSetting("Show mode", true));
     private final BooleanSetting background = addSetting(new BooleanSetting("Background", true));
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final BooleanSetting accentBar = addSetting(new BooleanSetting("Accent bar", true));
     private final BooleanSetting border = addSetting(new BooleanSetting("Border", false));
     private final HudPlacement placement = new HudPlacement(1, 0, false);
@@ -56,7 +54,6 @@ public final class ModuleListModule extends Module implements PlacedHudElement {
 
     public ModuleListModule() {
         super("ModuleList", "Lists enabled modules", Category.RENDER);
-        shadows.visibleWhen(background::get);
     }
 
     @Override
@@ -187,7 +184,6 @@ public final class ModuleListModule extends Module implements PlacedHudElement {
             var corners = new float[total][];
             var fillets = new float[total][];
             var vertical = new int[total];
-            var shadowShapes = new ArrayList<HudBackdrop.Background>();
             for (int i = 0; i < total; i++) {
                 corners[i] = new float[] {radius, radius, radius, radius};
                 fillets[i] = new float[4];
@@ -202,23 +198,9 @@ public final class ModuleListModule extends Module implements PlacedHudElement {
                     fillets[i][corner] = Math.max(-shape[corner], 0);
                     if (docked && shape[corner] < 0) vertical[i] |= 1 << corner;
                 }
-                boolean dockTop = atTop && Math.abs(visible.top() - originY) < 0.5f;
-                boolean dockBottom = atBottom && Math.abs(visible.bottom() - originY - height) < 0.5f;
-                int rowEdges = (slot.dockLeft() ? BlurRenderer.LEFT : 0) | (slot.dockRight() ? BlurRenderer.RIGHT : 0)
-                        | (dockTop ? BlurRenderer.TOP : 0) | (dockBottom ? BlurRenderer.BOTTOM : 0);
-                shadowShapes.add(shadowShape(visible, rowEdges, corners[i]));
             }
             for (var released : releasedRows) {
-                int index = visibleRows.size();
-                shadowShapes.add(shadowShape(released, 0, corners[index]));
                 visibleRows.add(released);
-            }
-            if (background.get() && shadows.get()) {
-                for (int i = 0; i < shadowShapes.size(); i++) {
-                    renderer.opacity(pop.value() * visibleRows.get(i).amount());
-                    HudBackdrop.draw(renderer, shadowShapes.get(i), List.of());
-                }
-                renderer.opacity(pop.value());
             }
             int primary = ThemeColors.primary();
             int secondary = ThemeColors.secondary();
@@ -316,14 +298,6 @@ public final class ModuleListModule extends Module implements PlacedHudElement {
             int bottomColor = ThemeColors.wave(primary, secondary, sliceBottom - originY, phase);
             renderer.gradient(x, y, width, sliceBottom - y, topColor, bottomColor, bottomColor, topColor);
         }
-    }
-
-    private static HudBackdrop.Background shadowShape(VisibleRow row, int edges, float[] corners) {
-        float width = row.shownRight() - row.shownLeft();
-        float[] fitted = corners.clone();
-        for (int corner = 0; corner < fitted.length; corner++) fitted[corner] = Math.min(fitted[corner], width / 2);
-        return HudBackdrop.docked(row.shownLeft(), row.top(), width, row.bottom() - row.top(), RADIUS, edges)
-                .withCorners(fitted);
     }
 
     private static float overlap(VisibleRow upper, VisibleRow lower, float seam) {

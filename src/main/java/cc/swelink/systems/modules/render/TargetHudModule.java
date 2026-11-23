@@ -3,14 +3,12 @@ package cc.swelink.systems.modules.render;
 import cc.swelink.utils.combat.Targets;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.DigitAnimation;
-import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.Glass;
 import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.SpringAnimation;
-import cc.swelink.settings.BooleanSetting;
 import cc.swelink.renderer.ThemeColors;
 import cc.swelink.settings.SecondsSetting;
 import cc.swelink.systems.hud.PlacedHudElement;
@@ -24,7 +22,6 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.phys.EntityHitResult;
 
-import java.util.List;
 import java.util.Locale;
 
 public final class TargetHudModule extends Module implements PlacedHudElement {
@@ -44,7 +41,6 @@ public final class TargetHudModule extends Module implements PlacedHudElement {
     private final SecondsSetting holdTime = addSetting(new SecondsSetting("Hold time", 10, 50));
     private AbstractClientPlayer heldTarget;
     private long lastSeen;
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final HudPlacement placement = new HudPlacement(0.5f, -1, true, 40);
     private final SpringAnimation visibilityMotion = new SpringAnimation();
     private final SpringAnimation healthMotion = new SpringAnimation();
@@ -176,9 +172,6 @@ public final class TargetHudModule extends Module implements PlacedHudElement {
         String name = player.getName().getString();
         float radius = 10;
         float headRadius = 6;
-        if (shadows.get()) {
-            HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(0, 0, width, HEIGHT, radius, edges)));
-        }
         renderer.blur.frostedGlass(renderer, Glass.HUD, 0, 0, width, HEIGHT, radius, ThemeColors.hudPanel(),
                 HEAD_PANEL_WIDTH, ThemeColors.hudHeader(), edges);
         float headX = (HEAD_PANEL_WIDTH - HEAD_SIZE) / 2;

@@ -4,8 +4,6 @@ import cc.swelink.Paradox;
 import cc.swelink.events.EventHandler;
 import cc.swelink.events.PacketSentEvent;
 import cc.swelink.renderer.FrameClock;
-import cc.swelink.renderer.HudBackdrop;
-import cc.swelink.settings.BooleanSetting;
 import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.SpringAnimation;
@@ -24,7 +22,6 @@ import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.util.ARGB;
-import java.util.List;
 
 
 public final class KeystrokesModule extends Module implements PlacedHudElement {
@@ -52,7 +49,6 @@ public final class KeystrokesModule extends Module implements PlacedHudElement {
     private static final int ATTACK = 4;
     private static final int USE = 5;
     private static final int JUMP = 6;
-    private final BooleanSetting shadows = addSetting(new BooleanSetting("Shadows", true));
     private final HudPlacement placement = new HudPlacement(0, 0.3f, false).withCenterSnap();
     private final SpringAnimation visibility = new SpringAnimation();
     private final FrameClock clock = new FrameClock();
@@ -153,7 +149,6 @@ public final class KeystrokesModule extends Module implements PlacedHudElement {
             try (var renderer = new Renderer2D(graphics)) {
                 renderer.opacity(reveal);
                 float step = KEY_SIZE + GAP;
-                if (shadows.get()) drawShadows(renderer, x, y, step);
                 drawKey(renderer, "W", x + step, y, KEY_SIZE, KEY_SIZE, FONT_SIZE, FORWARD);
                 drawKey(renderer, "A", x, y + step, KEY_SIZE, KEY_SIZE, FONT_SIZE, LEFT);
                 drawKey(renderer, "S", x + step, y + step, KEY_SIZE, KEY_SIZE, FONT_SIZE, BACKWARD);
@@ -167,19 +162,6 @@ public final class KeystrokesModule extends Module implements PlacedHudElement {
         } finally {
             pose.popMatrix();
         }
-    }
-
-    private void drawShadows(Renderer2D renderer, float x, float y, float step) {
-        float buttonY = y + step * 2;
-        HudBackdrop.draw(renderer, List.of(
-                new HudBackdrop.Background(x + step, y, KEY_SIZE, KEY_SIZE, KEY_RADIUS),
-                new HudBackdrop.Background(x, y + step, KEY_SIZE, KEY_SIZE, KEY_RADIUS),
-                new HudBackdrop.Background(x + step, y + step, KEY_SIZE, KEY_SIZE, KEY_RADIUS),
-                new HudBackdrop.Background(x + step * 2, y + step, KEY_SIZE, KEY_SIZE, KEY_RADIUS),
-                new HudBackdrop.Background(x, buttonY, KEY_SIZE, KEY_SIZE, KEY_RADIUS),
-                new HudBackdrop.Background(x + step, buttonY, KEY_SIZE, KEY_SIZE, KEY_RADIUS),
-                new HudBackdrop.Background(x + step * 2, buttonY, KEY_SIZE, KEY_SIZE, KEY_RADIUS),
-                new HudBackdrop.Background(x, buttonY + step, WIDTH, SPACE_HEIGHT, KEY_RADIUS)));
     }
 
     private void press(int key, boolean pressed, float delta) {

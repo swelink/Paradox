@@ -7,7 +7,6 @@ import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.DigitAnimation;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.Glass;
-import cc.swelink.renderer.HudBackdrop;
 import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.SpringAnimation;
@@ -243,9 +242,6 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
             enablePop.apply(renderer, x, y, panelWidth, panelHeight, edges);
             float radius = RADIUS;
             float base = enablePop.value();
-            if (gui().islandShadows()) {
-                HudBackdrop.draw(renderer, List.of(HudBackdrop.docked(x, y, panelWidth, panelHeight, radius, edges)));
-            }
             renderer.blur.frostedGlass(renderer, Glass.HUD, x, y, panelWidth, panelHeight, radius, ThemeColors.hudPanel());
             renderer.opacity(base);
 

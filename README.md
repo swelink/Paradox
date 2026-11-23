@@ -18,21 +18,6 @@ Paradox is a free and open-source mixin-based utility client for Minecraft **26.
 
 Press **Right Shift** in game to open the ClickGUI.
 
-<details>
-<summary><b>Modules</b></summary>
-
-**Combat:** AimBot, AnchorAura, AntiBot, AutoAnchor, AutoCart, AutoCrystal, AutoMace, AutoTotem, AutoTrap, Backtrack, BowBot, Criticals, CrystalAura, DiveMace, FakeLag, HoverTotem, KillAura, KnockbackDelay, PearlCatch, PearlGrappler, SafeAnchor, SafeCart, ShieldBreaker, SpearSwap, SprintReset, StickyTarget, TriggerBot, Velocity
-
-**Movement:** AutoEly, ElytraBoost, NoJumpDelay, NoSlow, NoWeb, OmniSprint, Speed, Target Strafe
-
-**Player:** AntiResourcePack, AutoDrain, AutoExp, AutoMLG, AutoWeb, Clutch, FastPlace, MiddleClickFriend, MultiActions, SpinBot, Timer
-
-**Render:** Ambience, Aspect Ratio, BlockHighlight, Cape, DynamicIsland, EffectsHud, ESP, FakePlayer, Fog, Freecam, Freelook, HandShaders, HandView, InventoryHud, KeybindHud, Keystrokes, ModuleList, Nametags, Place, Radar, Rotations, Smooth Camera, SpeedGraph, SwingAnimations, TargetESP, TargetHUD, Time, Trajectories, Watermark
-
-**Client:** ClickGUI, Config, HudEditor
-
-</details>
-
 ## Issues
 
 Found a bug or missing a feature? Open an issue [here](https://github.com/swelink/Paradox/issues).

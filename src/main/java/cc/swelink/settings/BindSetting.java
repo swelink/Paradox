@@ -57,6 +57,17 @@ public class BindSetting extends Setting<Integer> {
                 default -> "Mouse " + button;
             };
         }
-        return InputConstants.Type.KEYBOARD.getOrCreate(get()).getDisplayName().getString();
+        return shorten(InputConstants.Type.KEYBOARD.getOrCreate(get()).getDisplayName().getString());
+    }
+
+    private static String shorten(String name) {
+        String side = name.startsWith("Left ") ? "L" : name.startsWith("Right ") ? "R" : null;
+        if (side == null) return name;
+        String key = name.substring(name.indexOf(' ') + 1);
+        return switch (key) {
+            case "Shift", "Alt", "Win", "Super", "Cmd" -> side + key;
+            case "Control" -> side + "Ctrl";
+            default -> name;
+        };
     }
 }

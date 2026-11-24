@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 
 public final class HandShaderRenderer implements AutoCloseable {
     public static final Identifier POST_EFFECT = Paradox.id("hand_shaders");
+    public static final Identifier TRAIL_EFFECT = Paradox.id("hand_trail");
     private TextureTarget mask;
     private SubmitNodeStorage heldItems = new SubmitNodeStorage();
     private boolean releaseRequested;
@@ -36,11 +37,16 @@ public final class HandShaderRenderer implements AutoCloseable {
             close();
             return;
         }
-        render(frame, output, allocator, module::configure);
+        render(frame, output, allocator, module.handChain(), module::configureHands);
     }
 
     public void render(FeatureRenderDispatcher.PreparedFrame frame, RenderTarget output,
                        GraphicsResourceAllocator allocator, Consumer<PostChain> configure) {
+        render(frame, output, allocator, POST_EFFECT, configure);
+    }
+
+    public void render(FeatureRenderDispatcher.PreparedFrame frame, RenderTarget output,
+                       GraphicsResourceAllocator allocator, Identifier effect, Consumer<PostChain> configure) {
         if (releaseRequested) {
             close();
         }
@@ -48,7 +54,7 @@ public final class HandShaderRenderer implements AutoCloseable {
             return;
         }
         var client = Minecraft.getInstance();
-        var chain = client.getShaderManager().getPostChain(POST_EFFECT, Set.of(PostChain.MAIN_TARGET_ID));
+        var chain = client.getShaderManager().getPostChain(effect, Set.of(PostChain.MAIN_TARGET_ID));
         if (chain == null) {
             return;
         }

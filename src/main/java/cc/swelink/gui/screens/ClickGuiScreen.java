@@ -30,7 +30,6 @@ import cc.swelink.systems.modules.Module;
 import cc.swelink.systems.modules.ModuleManager;
 import cc.swelink.systems.modules.combat.AutoAnchorModule;
 import cc.swelink.systems.modules.render.DynamicIslandModule;
-import cc.swelink.systems.modules.render.PostProcessingModule;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
@@ -70,8 +69,6 @@ public class ClickGuiScreen extends Screen {
     private static final float SCREEN_MARGIN = 8;
     private static final float BASE_SCALE = 0.8f;
     private static final float RESIZE_STEP = 0.1f;
-    private static final int BACKGROUND_BLUR_DOWNSAMPLE = 4;
-    private static final int BACKGROUND_BLUR_PASSES = 4;
     private static final float POP_SPEED = 38;
     private static final float CLOSED = 0.03f;
 
@@ -289,21 +286,6 @@ public class ClickGuiScreen extends Screen {
         }
 
         Panel hoveredPanel = panelAt(x, y);
-        if (!overlay && PostProcessingModule.active()) {
-            graphics.nextStratum();
-            try (var renderer = new Renderer2D(graphics)) {
-                renderer.blur.backdrop(renderer, 0, 0, graphics.guiWidth(), graphics.guiHeight(), BACKGROUND_BLUR_DOWNSAMPLE,
-                        BACKGROUND_BLUR_PASSES, ARGB.color(Math.round(255 * windowOpacity()), 0xFFFFFF));
-            }
-        }
-        if (!overlay) {
-            graphics.nextStratum();
-            try (var renderer = new Renderer2D(graphics)) {
-                int dim = ClickGuiStyle.dim();
-                renderer.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(),
-                        ARGB.color(Math.round(ARGB.alpha(dim) * windowOpacity()), dim));
-            }
-        }
         graphics.nextStratum();
         UniformGuiFade.begin(graphics, windowOpacity());
 

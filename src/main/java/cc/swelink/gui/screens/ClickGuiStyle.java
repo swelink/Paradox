@@ -36,10 +36,6 @@ public final class ClickGuiStyle {
         return ThemeColors.theme().disabled;
     }
 
-    static int dim() {
-        return ThemeColors.theme().dim;
-    }
-
     public static int text() {
         return ThemeColors.theme().text;
     }

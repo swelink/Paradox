@@ -20,7 +20,6 @@ public enum Theme {
     public final int disabled;
     public final int muted;
     public final int text;
-    public final int dim;
     public final int hudPanel;
     public final int hudHeader;
 
@@ -35,7 +34,6 @@ public enum Theme {
         raised = layer(base, text, 0.18f);
         disabled = layer(base, text, 0.4f);
         muted = layer(base, text, 0.7f);
-        dim = base & 0xFFFFFF | 0x28000000;
         hudPanel = base & 0xFFFFFF | 0xDC000000;
         hudHeader = layer(base, text, 0.04f);
     }

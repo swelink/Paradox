@@ -81,6 +81,7 @@ import cc.swelink.systems.modules.render.RotationsModule;
 import cc.swelink.systems.modules.render.TargetHudModule;
 import cc.swelink.systems.modules.render.AmbienceModule;
 import cc.swelink.systems.modules.render.PostProcessingModule;
+import cc.swelink.systems.modules.render.BrutalModule;
 import cc.swelink.systems.modules.render.TargetEspModule;
 import cc.swelink.systems.modules.render.WatermarkModule;
 import cc.swelink.systems.modules.render.DynamicIslandModule;
@@ -203,6 +204,7 @@ public class ModuleManager {
         register(new WatermarkModule());
         register(targetHud);
         register(new TargetEspModule());
+        register(new BrutalModule());
         register(new AmbienceModule());
         register(new PostProcessingModule());
         register(new EffectsModule());

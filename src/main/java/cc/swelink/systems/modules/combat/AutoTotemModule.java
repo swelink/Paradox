@@ -10,6 +10,7 @@ import cc.swelink.renderer.FrameClock;
 import cc.swelink.settings.BooleanSetting;
 import cc.swelink.settings.IntSetting;
 import cc.swelink.settings.MillisecondsSetting;
+import cc.swelink.settings.ModeSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.utils.time.GameTime;
@@ -34,6 +35,7 @@ import java.util.Comparator;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class AutoTotemModule extends Module {
+    private final ModeSetting mode = addSetting(new ModeSetting("Mode", "Normal", "Normal", "Grim"));
     private final BooleanSetting offhand = addSetting(new BooleanSetting("Offhand", true));
     private final BooleanSetting silent = addSetting(new BooleanSetting("Silent", false));
     private final IntSetting hotbarSlot = addSetting(new IntSetting("Hotbar slot", 0, 0, 9) {
@@ -56,6 +58,8 @@ public final class AutoTotemModule extends Module {
     private boolean opened;
     private boolean silentOpen;
     private boolean clicked;
+    private boolean releasedKeys;
+    private boolean grimHold;
     private Slot target;
     private int destination = -1;
     private long hoverStarted;
@@ -69,6 +73,7 @@ public final class AutoTotemModule extends Module {
         lockMouse.visibleWhen(() -> !silent.get() && mouseMovement.get());
         mouseMovement.visibleWhen(() -> !silent.get());
         candidates.visibleWhen(() -> !silent.get());
+        closeDelay.visibleWhen(() -> !grimSilent());
     }
 
     @Override
@@ -110,8 +115,11 @@ public final class AutoTotemModule extends Module {
             if (player.isUsingItem()) client.gameMode.releaseUsingItem(player);
             if (silent.get() && client.gui.screen() == null && player.containerMenu == player.inventoryMenu) {
                 silentOpen = true;
-                KeyMapping.releaseAll();
-                if (player.isSprinting()) player.setSprinting(false);
+                if (!grim()) {
+                    releasedKeys = true;
+                    KeyMapping.releaseAll();
+                    if (player.isSprinting()) player.setSprinting(false);
+                }
             } else if (client.gui.screen() instanceof InventoryScreen existing) {
                 screen = existing;
                 opened = false;
@@ -145,12 +153,15 @@ public final class AutoTotemModule extends Module {
         }
         long now = GameTime.nanos();
         if (hoverStarted == 0) hoverStarted = now;
-        if (now - hoverStarted < delay.get() * 1_000_000L || !still()) return;
+        if (now - hoverStarted < delay.get() * 1_000_000L) return;
+        if (silentOpen && grim()) grimHold = true;
+        if (!still()) return;
 
         client.gameMode.handleContainerInput(menu(client).containerId, target.index, destination,
                 ContainerInput.SWAP, player);
         clicked = true;
         swapped = now;
+        if (silentOpen && grim()) closeSilent(client);
     }
 
     @EventHandler
@@ -190,11 +201,19 @@ public final class AutoTotemModule extends Module {
     }
 
     public boolean holdsInput() {
-        return isEnabled() && (screen != null && swapped == 0 || silentOpen);
+        return isEnabled() && (screen != null && swapped == 0 || silentOpen && (!grim() || grimHold));
     }
 
     public boolean silentBusy() {
-        return isEnabled() && silentOpen;
+        return isEnabled() && silentOpen && !grim();
+    }
+
+    private boolean grim() {
+        return mode.get().equals("Grim");
+    }
+
+    private boolean grimSilent() {
+        return grim() && silent.get();
     }
 
     private boolean active() {
@@ -209,7 +228,7 @@ public final class AutoTotemModule extends Module {
         if (clicked && client.player != null && client.getConnection() != null) {
             client.getConnection().send(new ServerboundContainerClosePacket(client.player.inventoryMenu.containerId));
         }
-        boolean restore = silentOpen && client.gui.screen() == null;
+        boolean restore = releasedKeys && client.gui.screen() == null;
         reset(client);
         if (restore) KeyMapping.setAll();
     }
@@ -278,7 +297,7 @@ public final class AutoTotemModule extends Module {
 
     private boolean still() {
         return !sentSprint && !sentInput.forward() && !sentInput.backward() && !sentInput.left() && !sentInput.right()
-                && !sentInput.shift();
+                && !sentInput.jump() && !sentInput.shift();
     }
 
     @EventHandler
@@ -317,6 +336,8 @@ public final class AutoTotemModule extends Module {
         opened = false;
         silentOpen = false;
         clicked = false;
+        releasedKeys = false;
+        grimHold = false;
         target = null;
         destination = -1;
         hoverStarted = 0;

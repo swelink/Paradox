@@ -77,6 +77,7 @@ public final class FakeLagModule extends Module {
         if (!isEnabled() || !showBox.get() || serverPosition == null
                 || client.player == null || !client.player.isAlive() || client.level != level
                 || client.getConnection() != listener || client.options.getCameraType().isFirstPerson()) return null;
+        if (mode.get().equals("Dynamic") && enemyInRange(client, client.player) == null) return null;
         Vec3 previous = previousServerPosition == null ? serverPosition : previousServerPosition;
         Vec3 shown = previous.lerp(serverPosition, client.getDeltaTracker().getGameTimeDeltaPartialTick(false));
         return client.player.getBoundingBox().move(shown.subtract(client.player.position()));
@@ -177,9 +178,7 @@ public final class FakeLagModule extends Module {
                 || player.isSpectator() || player.isPassenger() || player.isUsingItem() || player.isInWater()
                 || client.isPaused() || !Gameplay.focused(client)) return false;
         if (mode.get().equals("Constant")) return true;
-        Player enemy = client.level.players().stream().filter(other -> Targets.attackable(client, other)
-                        && other.distanceToSqr(player) <= (double) range.get() * range.get())
-                .min(Comparator.comparingDouble(other -> other.distanceToSqr(player))).orElse(null);
+        Player enemy = enemyInRange(client, player);
         if (enemy == null) return false;
         if (packets.isEmpty()) return true;
         var currentBox = player.getBoundingBox();
@@ -187,6 +186,12 @@ public final class FakeLagModule extends Module {
         var enemyBox = enemy.getBoundingBox();
         return CombatLagPolicy.fakeLag(Math.sqrt(enemyBox.distanceToSqr(currentBox)),
                 Math.sqrt(enemyBox.distanceToSqr(serverBox)), enemyBox.intersects(serverBox));
+    }
+
+    private Player enemyInRange(Minecraft client, Player player) {
+        return client.level.players().stream().filter(other -> Targets.attackable(client, other)
+                        && other.distanceToSqr(player) <= (double) range.get() * range.get())
+                .min(Comparator.comparingDouble(other -> other.distanceToSqr(player))).orElse(null);
     }
 
     private void flush(boolean cooldown) {

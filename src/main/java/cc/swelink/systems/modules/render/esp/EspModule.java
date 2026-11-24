@@ -9,21 +9,26 @@ import cc.swelink.renderer.ThemeColors;
 import cc.swelink.settings.ModeSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
+import cc.swelink.systems.modules.render.esp.mode.BoxEsp;
 import cc.swelink.systems.modules.render.esp.mode.EspMode;
 import cc.swelink.systems.modules.render.esp.mode.GlowEsp;
 import cc.swelink.systems.modules.render.esp.mode.TwoDEsp;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
 public final class EspModule extends Module {
-    private final ModeSetting mode = addSetting(new ModeSetting("Mode", "2D", "2D", "Glow"));
+    private final ModeSetting mode = addSetting(new ModeSetting("Mode", "2D", "2D", "Glow", "Box"));
     private final BooleanSetting self = addSetting(new BooleanSetting("Show self", false));
     private final BooleanSetting invisible = addSetting(new BooleanSetting("Invisible players", true));
     private final TwoDEsp twoDimensional = new TwoDEsp(this);
     private final GlowEsp glow = new GlowEsp(this);
+    private final BoxEsp box = new BoxEsp(this);
     private EspMode active;
 
     public EspModule() {
@@ -32,6 +37,9 @@ public final class EspModule extends Module {
             addSetting(setting);
         }
         for (var setting : glow.settings()) {
+            addSetting(setting);
+        }
+        for (var setting : box.settings()) {
             addSetting(setting);
         }
         mode.onChanged(ignored -> changeMode());
@@ -79,7 +87,7 @@ public final class EspModule extends Module {
         if (!isEnabled()) {
             return;
         }
-        EspMode next = glowSelected() ? glow : twoDimensional;
+        EspMode next = glowSelected() ? glow : selected(box) ? box : twoDimensional;
         if (active == next) {
             return;
         }
@@ -101,6 +109,14 @@ public final class EspModule extends Module {
             active.disable();
         }
         active = null;
+    }
+
+    public void submitWorld(PoseStack pose, LevelRenderState state, SubmitNodeCollector collector) {
+        var client = Minecraft.getInstance();
+        if (active == box && client.player != null && client.level != null && !client.gui.hud.isHidden()
+                && !state.cameraRenderState.isPanoramicMode) {
+            box.submit(client, pose, state, collector);
+        }
     }
 
     public void render(Minecraft client, GuiGraphicsExtractor graphics) {

@@ -9,6 +9,7 @@ import cc.swelink.systems.modules.movement.TargetStrafeModule;
 import cc.swelink.systems.modules.render.PlaceModule;
 import cc.swelink.systems.modules.render.TargetEspModule;
 import cc.swelink.systems.modules.render.TrajectoryModule;
+import cc.swelink.systems.modules.render.esp.EspModule;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -26,6 +27,7 @@ public abstract class LevelRendererOverlaysMixin {
         TargetStrafeRingRenderer.submit(Paradox.MODULES.get(TargetStrafeModule.class), pose, state, collector);
         TargetEspRenderer.submit(Paradox.MODULES.get(TargetEspModule.class), pose, state, collector);
         CombatLagRenderer.submit(pose, state, collector);
+        Paradox.MODULES.get(EspModule.class).submitWorld(pose, state, collector);
         Paradox.MODULES.get(PlaceModule.class).submit(pose, state, collector);
     }
 }

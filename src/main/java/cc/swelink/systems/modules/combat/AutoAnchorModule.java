@@ -215,7 +215,7 @@ public final class AutoAnchorModule extends Module {
 
     @EventHandler(priority = 60)
     private void onPreTick(PreTickEvent event) {
-        if (event.client().gui.screen() != null) cancelForScreen();
+        if (Gameplay.inMenu(event.client())) cancelForScreen();
     }
 
     @EventHandler(priority = 150)

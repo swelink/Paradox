@@ -1,5 +1,8 @@
 package cc.swelink.utils.player;
 
+import cc.swelink.Paradox;
+import cc.swelink.systems.modules.combat.AutoTotemModule;
+
 import net.minecraft.client.Minecraft;
 
 public final class Gameplay {
@@ -7,7 +10,11 @@ public final class Gameplay {
     }
 
     public static boolean focused(Minecraft client) {
-        return client.gui.screen() == null && client.getWindow().isFocused();
+        return !inMenu(client) && client.getWindow().isFocused();
+    }
+
+    public static boolean inMenu(Minecraft client) {
+        return client.gui.screen() != null || Paradox.MODULES.get(AutoTotemModule.class).silentBusy();
     }
 
     public static boolean canAct(Minecraft client) {

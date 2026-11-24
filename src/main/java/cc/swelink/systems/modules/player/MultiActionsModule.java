@@ -5,6 +5,7 @@ import cc.swelink.settings.BooleanSetting;
 import cc.swelink.settings.ModeSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
+import cc.swelink.utils.player.Gameplay;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -23,7 +24,7 @@ public final class MultiActionsModule extends Module {
     @Override
     public void tickInput(Minecraft client) {
         var player = client.player;
-        if (player == null || client.gameMode == null || client.gui.screen() != null || player.isSpectator()) return;
+        if (player == null || client.gameMode == null || Gameplay.inMenu(client) || player.isSpectator()) return;
         if (!player.isUsingItem() || !applies(player) || player.isHandsBusy()) return;
         if (!client.options.keyAttack.consumeClick()) return;
         while (client.options.keyAttack.consumeClick()) {

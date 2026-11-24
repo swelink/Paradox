@@ -39,6 +39,7 @@
     "CameraFreelookMixin",
     "CameraFreecamMixin",
     "MouseHandlerFreecamMixin",
+    "KeyboardHandlerSilentInventoryMixin",
     "CameraSmoothMixin",
     "CameraAspectRatioMixin",
     "AvatarRendererNametagsMixin",

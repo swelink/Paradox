@@ -5,6 +5,7 @@ import cc.swelink.systems.modules.combat.AutoTotemModule;
 import cc.swelink.systems.modules.render.FreecamModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.input.MouseButtonInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,6 +16,10 @@ public abstract class MouseHandlerFreecamMixin {
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void paradox$freecamScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         var client = Minecraft.getInstance();
+        if (Paradox.MODULES.get(AutoTotemModule.class).silentBusy()) {
+            ci.cancel();
+            return;
+        }
         if (client.gui.screen() == null && window == client.getWindow().handle()
                 && Paradox.MODULES.get(FreecamModule.class).scroll(vertical)) {
             ci.cancel();
@@ -24,5 +29,10 @@ public abstract class MouseHandlerFreecamMixin {
     @Inject(method = "onMove", at = @At("HEAD"), cancellable = true)
     private void paradox$autoTotemLock(long window, double x, double y, double deltaX, double deltaY, CallbackInfo ci) {
         if (Paradox.MODULES.get(AutoTotemModule.class).locksMouse()) ci.cancel();
+    }
+
+    @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
+    private void paradox$silentInventoryButton(long window, MouseButtonInfo info, int action, CallbackInfo ci) {
+        if (action != 0 && Paradox.MODULES.get(AutoTotemModule.class).silentBusy()) ci.cancel();
     }
 }

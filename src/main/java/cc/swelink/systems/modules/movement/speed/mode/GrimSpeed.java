@@ -6,6 +6,7 @@ import cc.swelink.settings.IntSetting;
 import cc.swelink.settings.PercentSetting;
 import cc.swelink.systems.modules.movement.TargetStrafeModule;
 import cc.swelink.systems.modules.movement.speed.SpeedModule;
+import cc.swelink.utils.player.Gameplay;
 import cc.swelink.utils.player.InventoryUtils;
 import cc.swelink.utils.player.SlotSelection;
 import cc.swelink.utils.rotation.MoveFix;
@@ -247,7 +248,7 @@ public final class GrimSpeed extends SpeedMode {
         boatAimed = false;
         if (originalSlot >= 0 && !switched && player.tickCount - lastBoatTick >= boatSwapBackDelay.get()) restoreSlot(client);
         if (switched && player.tickCount - switchedAt >= boatSwitchDelay.get() + boatSwapBackDelay.get()) restoreSlot(client);
-        if (!aimed || client.gameMode == null || client.gui.screen() != null || player.isHandsBusy()
+        if (!aimed || client.gameMode == null || Gameplay.inMenu(client) || player.isHandsBusy()
                 || !wantsBoats(client, player)) return;
         if (lastBoat != null && player.tickCount - lastBoatTick < boatPlaceDelay.get()) return;
         Rotation sent;

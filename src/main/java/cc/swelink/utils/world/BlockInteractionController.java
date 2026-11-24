@@ -4,6 +4,7 @@ import cc.swelink.Paradox;
 import cc.swelink.mixin.KeyMappingAccessor;
 import cc.swelink.settings.IntSetting;
 import cc.swelink.settings.Setting;
+import cc.swelink.utils.player.Gameplay;
 import cc.swelink.utils.player.InventoryUtils;
 import cc.swelink.utils.player.SlotSelection;
 import cc.swelink.utils.rotation.Rotation;
@@ -326,7 +327,7 @@ public abstract class BlockInteractionController<T extends BlockInteractionContr
         var player = client.player;
         return player != null && client.level != null && client.gameMode != null && player.isAlive()
                 && !player.isSpectator() && !player.isUsingItem() && !player.isHandsBusy()
-                && client.gui.screen() == null && client.getWindow().isFocused()
+                && Gameplay.focused(client)
                 && player.containerMenu == player.inventoryMenu;
     }
 

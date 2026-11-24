@@ -3,6 +3,7 @@ package cc.swelink.mixin;
 import cc.swelink.Paradox;
 import cc.swelink.events.ManualUseEvent;
 import cc.swelink.events.TargetRefreshEvent;
+import cc.swelink.systems.modules.combat.AutoTotemModule;
 
 import net.minecraft.client.Minecraft;
 
@@ -19,6 +20,11 @@ public abstract class MinecraftCombatInputMixin {
         if (Paradox.EVENTS.post(new ManualUseEvent(client)).cancelled()) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "handleKeybinds", at = @At("HEAD"), cancellable = true)
+    private void paradox$silentInventory(CallbackInfo ci) {
+        if (Paradox.MODULES.get(AutoTotemModule.class).silentBusy()) ci.cancel();
     }
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE",

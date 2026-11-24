@@ -14,12 +14,15 @@ import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.utils.time.GameTime;
 
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Items;
@@ -32,6 +35,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class AutoTotemModule extends Module {
     private final BooleanSetting offhand = addSetting(new BooleanSetting("Offhand", true));
+    private final BooleanSetting silent = addSetting(new BooleanSetting("Silent", false));
     private final IntSetting hotbarSlot = addSetting(new IntSetting("Hotbar slot", 0, 0, 9) {
         @Override
         protected String formatValue(int value) {
@@ -50,6 +54,8 @@ public final class AutoTotemModule extends Module {
     private final FrameClock clock = new FrameClock();
     private InventoryScreen screen;
     private boolean opened;
+    private boolean silentOpen;
+    private boolean clicked;
     private Slot target;
     private int destination = -1;
     private long hoverStarted;
@@ -59,8 +65,10 @@ public final class AutoTotemModule extends Module {
 
     public AutoTotemModule() {
         super("AutoTotem", "Puts a totem in offhand or slot", Category.COMBAT);
-        mouseSpeed.visibleWhen(mouseMovement::get);
-        lockMouse.visibleWhen(mouseMovement::get);
+        mouseSpeed.visibleWhen(() -> !silent.get() && mouseMovement.get());
+        lockMouse.visibleWhen(() -> !silent.get() && mouseMovement.get());
+        mouseMovement.visibleWhen(() -> !silent.get());
+        candidates.visibleWhen(() -> !silent.get());
     }
 
     @Override
@@ -75,9 +83,14 @@ public final class AutoTotemModule extends Module {
             reset(client);
             return;
         }
+        if (silentOpen && (client.gui.screen() != null || player.containerMenu != player.inventoryMenu)) {
+            closeSilent(client);
+            return;
+        }
         if (swapped != 0) {
             if (GameTime.nanos() - swapped >= closeDelay.get() * 1_000_000L) {
-                if (opened) player.closeContainer();
+                if (silentOpen) closeSilent(client);
+                else if (opened) player.closeContainer();
                 reset(client);
             }
             return;
@@ -85,16 +98,21 @@ public final class AutoTotemModule extends Module {
 
         int next = destination(client);
         if (next < 0 || !hasTotem(client, next)) {
-            if (screen != null && opened) player.closeContainer();
+            if (silentOpen) closeSilent(client);
+            else if (screen != null && opened) player.closeContainer();
             reset(client);
             return;
         }
 
-        if (screen == null) {
+        if (!active()) {
             if (!client.getWindow().isFocused()) return;
 
             if (player.isUsingItem()) client.gameMode.releaseUsingItem(player);
-            if (client.gui.screen() instanceof InventoryScreen existing) {
+            if (silent.get() && client.gui.screen() == null && player.containerMenu == player.inventoryMenu) {
+                silentOpen = true;
+                KeyMapping.releaseAll();
+                if (player.isSprinting()) player.setSprinting(false);
+            } else if (client.gui.screen() instanceof InventoryScreen existing) {
                 screen = existing;
                 opened = false;
             } else if (client.gui.screen() == null) {
@@ -117,11 +135,11 @@ public final class AutoTotemModule extends Module {
             arrived = false;
         }
 
-        if (target == null || !screen.getMenu().getCarried().isEmpty()) {
+        if (target == null || !menu(client).getCarried().isEmpty()) {
             hoverStarted = 0;
             return;
         }
-        if (mouseMovement.get() && !arrived) {
+        if (!silentOpen && mouseMovement.get() && !arrived) {
             hoverStarted = 0;
             return;
         }
@@ -129,8 +147,9 @@ public final class AutoTotemModule extends Module {
         if (hoverStarted == 0) hoverStarted = now;
         if (now - hoverStarted < delay.get() * 1_000_000L || !still()) return;
 
-        client.gameMode.handleContainerInput(screen.getMenu().containerId, target.index, destination,
+        client.gameMode.handleContainerInput(menu(client).containerId, target.index, destination,
                 ContainerInput.SWAP, player);
+        clicked = true;
         swapped = now;
     }
 
@@ -166,12 +185,33 @@ public final class AutoTotemModule extends Module {
     }
 
     public boolean locksMouse() {
-        return isEnabled() && lockMouse.get() && mouseMovement.get() && screen != null && target != null
+        return silentBusy() || isEnabled() && lockMouse.get() && mouseMovement.get() && screen != null && target != null
                 && swapped == 0 && !Double.isNaN(cursorX);
     }
 
     public boolean holdsInput() {
-        return isEnabled() && screen != null && swapped == 0;
+        return isEnabled() && (screen != null && swapped == 0 || silentOpen);
+    }
+
+    public boolean silentBusy() {
+        return isEnabled() && silentOpen;
+    }
+
+    private boolean active() {
+        return screen != null || silentOpen;
+    }
+
+    private AbstractContainerMenu menu(Minecraft client) {
+        return silentOpen ? client.player.inventoryMenu : screen.getMenu();
+    }
+
+    private void closeSilent(Minecraft client) {
+        if (clicked && client.player != null && client.getConnection() != null) {
+            client.getConnection().send(new ServerboundContainerClosePacket(client.player.inventoryMenu.containerId));
+        }
+        boolean restore = silentOpen && client.gui.screen() == null;
+        reset(client);
+        if (restore) KeyMapping.setAll();
     }
 
     @EventHandler(priority = Integer.MAX_VALUE)
@@ -210,6 +250,13 @@ public final class AutoTotemModule extends Module {
     }
 
     private Slot pickTotem(Minecraft client, int destination) {
+        if (silentOpen) {
+            var totems = new ArrayList<Slot>();
+            for (var slot : client.player.inventoryMenu.slots) {
+                if (valid(client, slot, destination)) totems.add(slot);
+            }
+            return totems.isEmpty() ? null : totems.get(ThreadLocalRandom.current().nextInt(totems.size()));
+        }
         var window = client.getWindow();
         var access = (AbstractContainerScreenInvoker) screen;
         double scaleX = (double) window.getScreenWidth() / window.getGuiScaledWidth();
@@ -254,6 +301,10 @@ public final class AutoTotemModule extends Module {
     @Override
     protected void onDisable() {
         var client = Minecraft.getInstance();
+        if (silentOpen) {
+            closeSilent(client);
+            return;
+        }
         if (screen != null && opened && client.player != null && client.gui.screen() == screen) {
             client.player.closeContainer();
         }
@@ -264,6 +315,8 @@ public final class AutoTotemModule extends Module {
         arrived = false;
         screen = null;
         opened = false;
+        silentOpen = false;
+        clicked = false;
         target = null;
         destination = -1;
         hoverStarted = 0;

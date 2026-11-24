@@ -206,7 +206,7 @@ public final class TargetEspRenderer {
         return baseY + RING_MARGIN + (height - RING_MARGIN * 2) * (0.5 - 0.5 * Math.cos(phase));
     }
 
-    private static int hurtColor(Entity target, int color, float partialTicks) {
+    public static int hurtColor(Entity target, int color, float partialTicks) {
         if (!(target instanceof LivingEntity living) || living.hurtTime <= 0 || living.hurtDuration <= 0) return color;
         float hurt = Math.clamp((living.hurtTime - partialTicks) / living.hurtDuration, 0, 1);
         return ARGB.srgbLerp(hurt, color, HURT_COLOR);

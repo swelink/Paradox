@@ -10,7 +10,7 @@ import cc.swelink.settings.ModeSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.systems.modules.render.esp.mode.EspMode;
-import cc.swelink.systems.modules.render.esp.mode.ShaderEsp;
+import cc.swelink.systems.modules.render.esp.mode.GlowEsp;
 import cc.swelink.systems.modules.render.esp.mode.TwoDEsp;
 
 import net.minecraft.client.Minecraft;
@@ -19,11 +19,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
 public final class EspModule extends Module {
-    private final ModeSetting mode = addSetting(new ModeSetting("Mode", "2D", "2D", "Shader"));
+    private final ModeSetting mode = addSetting(new ModeSetting("Mode", "2D", "2D", "Glow"));
     private final BooleanSetting self = addSetting(new BooleanSetting("Show self", false));
     private final BooleanSetting invisible = addSetting(new BooleanSetting("Invisible players", true));
     private final TwoDEsp twoDimensional = new TwoDEsp(this);
-    private final ShaderEsp shader = new ShaderEsp(this);
+    private final GlowEsp glow = new GlowEsp(this);
     private EspMode active;
 
     public EspModule() {
@@ -31,7 +31,7 @@ public final class EspModule extends Module {
         for (var setting : twoDimensional.settings()) {
             addSetting(setting);
         }
-        for (var setting : shader.settings()) {
+        for (var setting : glow.settings()) {
             addSetting(setting);
         }
         mode.onChanged(ignored -> changeMode());
@@ -41,12 +41,12 @@ public final class EspModule extends Module {
         return mode.get().equals(candidate.name());
     }
 
-    public boolean shaderSelected() {
-        return selected(shader);
+    public boolean glowSelected() {
+        return selected(glow);
     }
 
-    public boolean shaderActive() {
-        return isEnabled() && active == shader && PostProcessingModule.active();
+    public boolean glowActive() {
+        return isEnabled() && active == glow && PostProcessingModule.active();
     }
 
     public int color() {
@@ -57,8 +57,8 @@ public final class EspModule extends Module {
         return twoDimensional;
     }
 
-    public ShaderEsp shader() {
-        return shader;
+    public GlowEsp glow() {
+        return glow;
     }
 
     public boolean shouldRender(Entity entity) {
@@ -79,7 +79,7 @@ public final class EspModule extends Module {
         if (!isEnabled()) {
             return;
         }
-        EspMode next = shaderSelected() ? shader : twoDimensional;
+        EspMode next = glowSelected() ? glow : twoDimensional;
         if (active == next) {
             return;
         }

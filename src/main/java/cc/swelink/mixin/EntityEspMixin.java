@@ -17,15 +17,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityEspMixin {
     @Inject(method = "affectedByCulling", at = @At("HEAD"), cancellable = true)
     private void paradox$keepEspModel(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (Paradox.MODULES.get(EspModule.class).shaderActive() && Paradox.MODULES.get(EspModule.class).shouldRender(entity)) {
+        if (Paradox.MODULES.get(EspModule.class).glowActive() && Paradox.MODULES.get(EspModule.class).shouldRender(entity)) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "extractRenderState", at = @At("RETURN"))
     private void paradox$espColor(Entity entity, EntityRenderState state, float tick, CallbackInfo ci) {
-        if (Paradox.MODULES.get(EspModule.class).shaderActive() && Paradox.MODULES.get(EspModule.class).shouldRender(entity)) {
-            state.outlineColor = Paradox.MODULES.get(EspModule.class).color();
+        if (Paradox.MODULES.get(EspModule.class).glowActive() && Paradox.MODULES.get(EspModule.class).shouldRender(entity)) {
+            state.outlineColor = Paradox.MODULES.get(EspModule.class).glow().color(entity, tick);
         }
     }
 }

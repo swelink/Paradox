@@ -1,10 +1,11 @@
 {
   "targets": {
-    "glow_source": {},
-    "glow_horizontal": {},
-    "glow_vertical": {},
-    "glow_composite": {},
-    "hand_mask": {}
+    "hand_mask": {},
+    "glow_h1": {},
+    "glow_v1": {},
+    "glow_h2": {},
+    "glow_v2": {},
+    "glow_composite": {}
   },
   "passes": [
     {
@@ -21,139 +22,15 @@
     },
     {
       "vertex_shader": "minecraft:core/screenquad",
-      "fragment_shader": "paradox:post/glow_source",
-      "inputs": [
-        {
-          "sampler_name": "In",
-          "target": "hand_mask"
-        }
-      ],
-      "output": "glow_source",
-      "uniforms": {
-        "EspConfig": [
-          {
-            "name": "Settings",
-            "type": "vec4",
-            "value": [
-              2.0,
-              0.25,
-              3.0,
-              2.0
-            ]
-          }
-        ],
-        "OutlineKernel": [
-          {"name": "Sample0","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample1","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample2","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample3","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample4","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample5","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample6","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample7","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample8","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample9","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample10","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample11","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample12","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample13","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample14","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample15","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample16","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample17","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample18","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample19","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample20","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample21","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample22","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample23","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample24","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample25","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample26","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample27","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample28","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample29","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample30","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample31","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample32","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample33","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample34","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample35","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample36","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample37","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample38","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample39","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample40","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample41","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample42","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample43","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample44","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample45","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample46","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample47","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample48","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample49","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample50","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample51","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample52","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample53","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample54","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample55","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample56","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample57","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample58","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample59","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample60","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample61","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample62","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample63","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample64","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample65","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample66","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample67","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample68","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample69","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample70","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample71","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample72","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample73","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample74","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample75","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample76","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample77","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample78","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample79","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample80","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample81","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample82","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample83","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample84","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample85","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample86","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample87","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample88","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample89","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample90","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample91","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample92","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample93","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample94","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample95","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample96","type": "vec4","value": [0,0,0,0]}
-        ]
-      }
-    },
-    {
-      "vertex_shader": "minecraft:core/screenquad",
       "fragment_shader": "paradox:post/glow_blur",
       "inputs": [
         {
           "sampler_name": "In",
-          "target": "glow_source",
+          "target": "hand_mask",
           "bilinear": true
         }
       ],
-      "output": "glow_horizontal",
+      "output": "glow_h1",
       "uniforms": {
         "BlurDirection": [
           {
@@ -168,21 +45,156 @@
           }
         ],
         "BlurKernel": [
-          {"name": "Sample0","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample1","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample2","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample3","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample4","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample5","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample6","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample7","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample8","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample9","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample10","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample11","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample12","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample13","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample14","type": "vec4","value": [0,0,0,0]}
+          {
+            "name": "Sample0",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample1",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample4",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample5",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample6",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample7",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample8",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample9",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample10",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample11",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample12",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample13",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample14",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
         ]
       }
     },
@@ -192,11 +204,11 @@
       "inputs": [
         {
           "sampler_name": "In",
-          "target": "glow_horizontal",
+          "target": "glow_h1",
           "bilinear": true
         }
       ],
-      "output": "glow_vertical",
+      "output": "glow_v1",
       "uniforms": {
         "BlurDirection": [
           {
@@ -211,58 +223,544 @@
           }
         ],
         "BlurKernel": [
-          {"name": "Sample0","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample1","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample2","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample3","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample4","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample5","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample6","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample7","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample8","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample9","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample10","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample11","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample12","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample13","type": "vec4","value": [0,0,0,0]},
-          {"name": "Sample14","type": "vec4","value": [0,0,0,0]}
+          {
+            "name": "Sample0",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample1",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample4",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample5",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample6",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample7",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample8",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample9",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample10",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample11",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample12",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample13",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample14",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
         ]
       }
     },
     {
       "vertex_shader": "minecraft:core/screenquad",
-      "fragment_shader": "paradox:post/hand_shaders",
+      "fragment_shader": "paradox:post/glow_blur",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "glow_v1",
+          "bilinear": true
+        }
+      ],
+      "output": "glow_h2",
+      "uniforms": {
+        "BlurDirection": [
+          {
+            "name": "Direction",
+            "type": "vec4",
+            "value": [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "BlurKernel": [
+          {
+            "name": "Sample0",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample1",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample4",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample5",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample6",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample7",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample8",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample9",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample10",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample11",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample12",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample13",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample14",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/glow_blur",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "glow_h2",
+          "bilinear": true
+        }
+      ],
+      "output": "glow_v2",
+      "uniforms": {
+        "BlurDirection": [
+          {
+            "name": "Direction",
+            "type": "vec4",
+            "value": [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "BlurKernel": [
+          {
+            "name": "Sample0",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample1",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample2",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample3",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample4",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample5",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample6",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample7",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample8",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample9",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample10",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample11",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample12",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample13",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "Sample14",
+            "type": "vec4",
+            "value": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/glow",
       "inputs": [
         {
           "sampler_name": "In",
           "target": "hand_mask"
-        },
-        {
-          "sampler_name": "Source",
-          "target": "glow_source",
-          "bilinear": true
         },
         {
           "sampler_name": "Glow",
-          "target": "glow_vertical",
+          "target": "glow_v2",
           "bilinear": true
         }
       ],
       "output": "glow_composite",
       "uniforms": {
-        "EspConfig": [
+        "GlowConfig": [
           {
             "name": "Settings",
             "type": "vec4",
             "value": [
-              2.0,
-              0.25,
-              3.0,
-              2.0
+              1.0,
+              0.12,
+              1.0,
+              0.0
             ]
           }
         ],
-        "HandColor": [
+        "GlowTint": [
           {
             "name": "Tint",
             "type": "vec4",

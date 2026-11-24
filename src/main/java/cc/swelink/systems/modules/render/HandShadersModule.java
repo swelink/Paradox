@@ -5,13 +5,12 @@ import cc.swelink.settings.BooleanSetting;
 import cc.swelink.renderer.ThemeColors;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
-import cc.swelink.utils.render.OutlineShaderSettings;
-import cc.swelink.utils.render.PostEffectUtils;
+import cc.swelink.utils.render.GlowSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 
 public final class HandShadersModule extends Module {
-    private final OutlineShaderSettings shader = new OutlineShaderSettings(this::addSetting, () -> true);
+    private final GlowSettings shader = new GlowSettings(this::addSetting, () -> true, 0);
     private final BooleanSetting thirdPerson = addSetting(new BooleanSetting("Third person", false));
     private final HandShaderRenderer renderer = new HandShaderRenderer();
 
@@ -39,10 +38,7 @@ public final class HandShadersModule extends Module {
     }
 
     public void configure(PostChain chain) {
-        shader.configure(chain);
-        int rgb = ThemeColors.primary();
-        PostEffectUtils.writeUniform(chain, "HandColor", ((rgb >>> 16) & 255) / 255f,
-                ((rgb >>> 8) & 255) / 255f, (rgb & 255) / 255f, 1);
+        shader.configure(chain, ThemeColors.primary());
     }
 
     @Override

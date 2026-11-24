@@ -6,8 +6,7 @@ import cc.swelink.renderer.ThemeColors;
 import cc.swelink.settings.IntSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
-import cc.swelink.utils.render.OutlineShaderSettings;
-import cc.swelink.utils.render.PostEffectUtils;
+import cc.swelink.utils.render.GlowSettings;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -25,7 +24,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import org.joml.Matrix4f;
 
 public final class BlockHighlightModule extends Module {
-    private final OutlineShaderSettings shader = new OutlineShaderSettings(this::addSetting, () -> true);
+    private final GlowSettings shader = new GlowSettings(this::addSetting, () -> true, 0);
     private final IntSetting speed = addSetting(new IntSetting("Speed", 12, 1, 30));
     private final HandShaderRenderer renderer = new HandShaderRenderer();
     private final FrameClock clock = new FrameClock();
@@ -109,10 +108,7 @@ public final class BlockHighlightModule extends Module {
     }
 
     private void configure(PostChain chain) {
-        shader.configure(chain);
-        int rgb = ThemeColors.primary();
-        PostEffectUtils.writeUniform(chain, "HandColor", ((rgb >>> 16) & 255) / 255f,
-                ((rgb >>> 8) & 255) / 255f, (rgb & 255) / 255f, 1);
+        shader.configure(chain, ThemeColors.primary());
     }
 
     public void close() {

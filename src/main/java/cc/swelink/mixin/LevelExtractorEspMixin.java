@@ -18,7 +18,7 @@ public abstract class LevelExtractorEspMixin {
     private void paradox$includeHiddenPlayers(Entity entity, Frustum frustum, double cameraX, double cameraY,
                                             double cameraZ, float tick, long sectionFade,
                                             CallbackInfoReturnable<Boolean> cir) {
-        if (Paradox.MODULES.get(EspModule.class).shaderActive() && Paradox.MODULES.get(EspModule.class).shouldRender(entity)) {
+        if (Paradox.MODULES.get(EspModule.class).glowActive() && Paradox.MODULES.get(EspModule.class).shouldRender(entity)) {
             cir.setReturnValue(frustum.isVisible(entity.getBoundingBox().inflate(0.5)));
         }
     }

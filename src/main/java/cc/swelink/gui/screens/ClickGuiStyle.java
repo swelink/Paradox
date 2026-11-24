@@ -4,9 +4,9 @@ import cc.swelink.renderer.ThemeColors;
 
 public final class ClickGuiStyle {
     static final float CARD_RADIUS = 9.2f;
-    static final float MODULE_FONT_SIZE = 16;
-    static final float SETTING_FONT_SIZE = 12;
-    static final float FONT_SIZE = 14;
+    static final float MODULE_FONT_SIZE = 14;
+    static final float SETTING_FONT_SIZE = 11;
+    static final float FONT_SIZE = 12.5f;
     static final float SETTINGS_SPACING = 4;
     static final float SETTING_ROW_HEIGHT = 24;
     static final float SLIDER_HEIGHT = 36;

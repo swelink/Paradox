@@ -63,7 +63,7 @@ public class ClickGuiScreen extends Screen {
     private static final float KEY_PAD = 5;
     private static final float KEY_HEIGHT = 14;
     private static final int VISIBLE_MODULES = 18;
-    private static final float TITLE_FONT = 17.5f;
+    private static final float TITLE_FONT = 15.5f;
     private static final float CATEGORY_ICON = 16;
     private static final float CATEGORY_ICON_GAP = 6;
     private static final float SCREEN_MARGIN = 8;
@@ -99,13 +99,13 @@ public class ClickGuiScreen extends Screen {
     private static final float CHIP_PAD = 6;
     private static final float CHIP_GAP = 4;
     private static final float CHIP_RADIUS = 3;
-    private static final float CHIP_FONT = 10.5f;
+    private static final float CHIP_FONT = 9.5f;
     private static final float PICKER_RADIUS = 6.9f;
     private static final float COLOR_FIELD_HEIGHT = 80;
     private static final float HUE_GAP = 8;
     private static final float HUE_HEIGHT = 8;
 
-    private static final float DESCRIPTION_FONT = 12;
+    private static final float DESCRIPTION_FONT = 11;
     private static final float DESCRIPTION_PAD = 7;
     private static final float DESCRIPTION_WIDTH = 190;
 

@@ -9,7 +9,6 @@ import cc.swelink.mixin.EntityEventPacketAccessor;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.TextRenderer;
-import cc.swelink.renderer.ThemeColors;
 import cc.swelink.settings.BooleanSetting;
 import cc.swelink.settings.IntSetting;
 import cc.swelink.settings.PercentSetting;
@@ -24,9 +23,7 @@ import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix3x2fStack;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class BrutalModule extends Module {
@@ -37,10 +34,12 @@ public final class BrutalModule extends Module {
     private static final float LOGO_V1 = 771 / 1024f;
     private static final float LOGO_ASPECT = 840 / 518f;
     private static final long KILL_WINDOW = 5_000_000_000L;
-    private static final float POPUP_TIME = 1.4f;
-    private static final float POPUP_SIZE = 72;
-    private static final float COUNTER_SIZE = 18;
-    private static final int KILL_COLOR = 0xFFFF3B3B;
+    private static final float POP_TIME = 0.6f;
+    private static final float FLASH_TIME = 0.5f;
+    private static final float FLASH_ALPHA = 0.45f;
+    private static final float COUNTER_HEIGHT = 0.3f;
+    private static final float COUNTER_MARGIN = 0.03f;
+    private static final int BLOOD = 0xFFE00000;
     private static int kills;
 
     private final IntSetting size = addSetting(new IntSetting("Logo size", 45, 10, 100));
@@ -48,12 +47,12 @@ public final class BrutalModule extends Module {
     private final PercentSetting opacity = addSetting(new PercentSetting("Logo opacity", 35));
     private final BooleanSetting counter = addSetting(new BooleanSetting("Kill counter", true));
     private final Map<Integer, Long> attacked = new HashMap<>();
-    private final List<Float> popups = new ArrayList<>();
+    private float sinceKill = POP_TIME;
     private final FrameClock clock = new FrameClock();
     private float angle;
 
     public BrutalModule() {
-        super("Brutal", "Spinning logo and kill popups", Category.RENDER);
+        super("Brutal", "Spinning logo and kill counter", Category.RENDER);
     }
 
     @EventHandler(priority = 0)
@@ -71,7 +70,7 @@ public final class BrutalModule extends Module {
         Long time = attacked.remove(((EntityEventPacketAccessor) packet).paradox$entityId());
         if (time != null && System.nanoTime() - time <= KILL_WINDOW) {
             kills++;
-            popups.add(0f);
+            sinceKill = 0;
         }
     }
 
@@ -89,13 +88,17 @@ public final class BrutalModule extends Module {
         angle = (angle + speed.get() * delta) % 360;
         long now = System.nanoTime();
         attacked.values().removeIf(time -> now - time > KILL_WINDOW);
-        popups.replaceAll(time -> time + delta);
-        popups.removeIf(time -> time >= POPUP_TIME);
+        sinceKill = Math.min(sinceKill + delta, POP_TIME);
 
         float centerX = graphics.guiWidth() / 2f;
         float centerY = graphics.guiHeight() / 2f;
         var pose = graphics.pose();
         try (var renderer = new Renderer2D(graphics, TextRenderer.Font.INTER_MEDIUM)) {
+            float flash = 1 - FrameClock.smoothStep(Math.min(sinceKill / FLASH_TIME, 1));
+            if (flash > 0) {
+                renderer.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(),
+                        ARGB.color(Math.round(255 * FLASH_ALPHA * flash), BLOOD));
+            }
             float logoWidth = graphics.guiHeight() * size.get() / 100f;
             float logoHeight = logoWidth / LOGO_ASPECT;
             if (opacity.get() > 0 && logoWidth > 0) {
@@ -105,36 +108,29 @@ public final class BrutalModule extends Module {
                     pose.rotate((float) Math.toRadians(angle));
                     renderer.textures.iconRegion(LOGO, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight,
                             LOGO_U0, LOGO_V0, LOGO_U1, LOGO_V1,
-                            ARGB.color(Math.round(255 * opacity.get() / 100f), ThemeColors.primary()));
+                            ARGB.color(Math.round(255 * opacity.get() / 100f), BLOOD));
                 } finally {
                     pose.popMatrix();
                 }
             }
             if (counter.get()) {
-                String text = kills == 1 ? "1 kill" : kills + " kills";
-                float y = centerY + logoWidth / 2 + 6;
-                renderer.text.centered(text, centerX + 1, y + 1, COUNTER_SIZE, 0x99000000);
-                renderer.text.centered(text, centerX, y, COUNTER_SIZE, ThemeColors.primary());
-            }
-            for (float time : popups) {
-                drawPopup(renderer, pose, centerX, centerY, time / POPUP_TIME);
+                drawCounter(renderer, pose, graphics.guiWidth() * COUNTER_MARGIN, centerY, graphics.guiHeight() * COUNTER_HEIGHT);
             }
         }
     }
 
-    private void drawPopup(Renderer2D renderer, Matrix3x2fStack pose, float centerX, float centerY, float progress) {
-        float pop = Math.min(progress / 0.18f, 1);
-        float scale = pop < 1 ? 0.4f + 1.1f * FrameClock.smoothStep(pop) : 1.5f - 0.5f * FrameClock.smoothStep(Math.min((progress - 0.18f) / 0.2f, 1));
-        float fade = progress < 0.65f ? 1 : 1 - FrameClock.smoothStep((progress - 0.65f) / 0.35f);
-        float rise = 40 * FrameClock.smoothStep(progress);
-        int alpha = Math.round(255 * fade);
-        float lineHeight = renderer.text.lineHeight(POPUP_SIZE);
+    private void drawCounter(Renderer2D renderer, Matrix3x2fStack pose, float left, float centerY, float size) {
+        String text = "-" + kills;
+        float progress = sinceKill / POP_TIME;
+        float scale = 1 + 0.35f * (1 - FrameClock.smoothStep(progress));
+        float lineHeight = renderer.text.lineHeight(size);
+        float shadow = size / 30;
         pose.pushMatrix();
         try {
-            pose.translate(centerX, centerY - rise);
+            pose.translate(left, centerY);
             pose.scale(scale);
-            renderer.text.centered("-1", 2, -lineHeight / 2 + 2, POPUP_SIZE, ARGB.color(alpha * 3 / 5, 0xFF000000));
-            renderer.text.centered("-1", 0, -lineHeight / 2, POPUP_SIZE, ARGB.color(alpha, KILL_COLOR));
+            renderer.text.draw(text, shadow, -lineHeight / 2 + shadow, size, 0x99000000);
+            renderer.text.draw(text, 0, -lineHeight / 2, size, BLOOD);
         } finally {
             pose.popMatrix();
         }

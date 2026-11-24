@@ -783,8 +783,9 @@
       "fragment_shader": "paradox:post/hand_trail",
       "inputs": [
         {
-          "sampler_name": "In",
-          "target": "glow_composite"
+          "sampler_name": "Glow",
+          "target": "glow_v2",
+          "bilinear": true
         },
         {
           "sampler_name": "History",
@@ -803,6 +804,30 @@
               0.0,
               1.0,
               0.0
+            ]
+          }
+        ],
+        "GlowConfig": [
+          {
+            "name": "Settings",
+            "type": "vec4",
+            "value": [
+              1.0,
+              0.12,
+              1.0,
+              0.0
+            ]
+          }
+        ],
+        "GlowTint": [
+          {
+            "name": "Tint",
+            "type": "vec4",
+            "value": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
             ]
           }
         ]
@@ -839,7 +864,15 @@
       "inputs": [
         {
           "sampler_name": "In",
+          "target": "glow_composite"
+        },
+        {
+          "sampler_name": "Trail",
           "target": "trail_next"
+        },
+        {
+          "sampler_name": "Mask",
+          "target": "hand_mask"
         }
       ],
       "output": "minecraft:main"

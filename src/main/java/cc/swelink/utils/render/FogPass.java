@@ -18,6 +18,8 @@ import net.minecraft.client.renderer.feature.FeatureFrameContext;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.feature.phase.FeatureRenderPhase;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
@@ -44,20 +46,23 @@ public final class FogPass {
         camera = null;
         pool = null;
         deferredFrame = null;
-        deferredPhase = null;
+        deferredPhases.clear();
         deferredContext = null;
     }
 
     private static FeatureRenderDispatcher.PreparedFrame deferredFrame;
-    private static FeatureRenderPhase<?> deferredPhase;
+    private static final List<FeatureRenderPhase<?>> deferredPhases = new ArrayList<>();
     private static FeatureFrameContext deferredContext;
 
     public static boolean deferCustomGeometry(FeatureRenderDispatcher.PreparedFrame frame, FeatureRenderPhase<?> phase,
                                               FeatureFrameContext context) {
         if (camera == null || pool == null || !PostProcessingModule.active()
                 || !wantsAmbience() && !Paradox.MODULES.get(FogModule.class).rendering()) return false;
+        if (deferredFrame != frame) {
+            deferredPhases.clear();
+        }
         deferredFrame = frame;
-        deferredPhase = phase;
+        deferredPhases.add(phase);
         deferredContext = context;
         return true;
     }
@@ -65,17 +70,19 @@ public final class FogPass {
     public static void drawDeferred(RenderTarget target) {
         if (deferredFrame == null) return;
         var frame = deferredFrame;
-        var phase = deferredPhase;
+        var phases = List.copyOf(deferredPhases);
         var context = deferredContext;
         deferredFrame = null;
-        deferredPhase = null;
+        deferredPhases.clear();
         deferredContext = null;
         var pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Paradox custom geometry after fog", target.getColorTextureView(), Optional.empty(),
                 target.getDepthTextureView(), OptionalDouble.empty());
         try {
             RenderSystem.bindDefaultUniforms(pass);
-            ((PreparedFrameInvoker) (Object) frame).paradox$executePhase(phase, context, pass);
+            for (var phase : phases) {
+                ((PreparedFrameInvoker) (Object) frame).paradox$executePhase(phase, context, pass);
+            }
         } finally {
             pass.close();
         }

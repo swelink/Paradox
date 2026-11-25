@@ -14,7 +14,7 @@ public final class Gameplay {
     }
 
     public static boolean inMenu(Minecraft client) {
-        return client.gui.screen() != null || Paradox.MODULES.get(AutoTotemModule.class).silentBusy();
+        return client.gui.screen() != null || Paradox.MODULES.get(AutoTotemModule.class).blocksActions();
     }
 
     public static boolean canAct(Minecraft client) {

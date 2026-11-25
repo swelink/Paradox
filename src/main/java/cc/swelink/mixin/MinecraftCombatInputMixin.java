@@ -24,7 +24,7 @@ public abstract class MinecraftCombatInputMixin {
 
     @Inject(method = "handleKeybinds", at = @At("HEAD"), cancellable = true)
     private void paradox$silentInventory(CallbackInfo ci) {
-        if (Paradox.MODULES.get(AutoTotemModule.class).silentBusy()) ci.cancel();
+        if (Paradox.MODULES.get(AutoTotemModule.class).blocksActions()) ci.cancel();
     }
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE",

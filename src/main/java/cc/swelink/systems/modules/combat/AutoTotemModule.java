@@ -18,6 +18,7 @@ import cc.swelink.utils.time.GameTime;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
@@ -35,9 +36,11 @@ import java.util.Comparator;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class AutoTotemModule extends Module {
-    private final ModeSetting mode = addSetting(new ModeSetting("Mode", "Normal", "Normal", "Grim"));
+    private static final int TOTEMGUARD_SPREAD = 200;
+    private final ModeSetting mode = addSetting(new ModeSetting("Mode", "Normal", "Normal", "TotemGuard"));
     private final BooleanSetting offhand = addSetting(new BooleanSetting("Offhand", true));
     private final BooleanSetting silent = addSetting(new BooleanSetting("Silent", false));
+    private final ModeSetting silentMode = addSetting(new ModeSetting("Silent mode", "Normal", "Normal", "Grim"));
     private final IntSetting hotbarSlot = addSetting(new IntSetting("Hotbar slot", 0, 0, 9) {
         @Override
         protected String formatValue(int value) {
@@ -60,6 +63,8 @@ public final class AutoTotemModule extends Module {
     private boolean clicked;
     private boolean releasedKeys;
     private boolean grimHold;
+    private boolean closedThisTick;
+    private long wait;
     private Slot target;
     private int destination = -1;
     private long hoverStarted;
@@ -69,11 +74,13 @@ public final class AutoTotemModule extends Module {
 
     public AutoTotemModule() {
         super("AutoTotem", "Puts a totem in offhand or slot", Category.COMBAT);
-        mouseSpeed.visibleWhen(() -> !silent.get() && mouseMovement.get());
-        lockMouse.visibleWhen(() -> !silent.get() && mouseMovement.get());
-        mouseMovement.visibleWhen(() -> !silent.get());
-        candidates.visibleWhen(() -> !silent.get());
-        closeDelay.visibleWhen(() -> !grimSilent());
+        silentMode.visibleWhen(silent::get);
+        delay.visibleWhen(() -> !totemGuard());
+        mouseSpeed.visibleWhen(() -> !silent() && mouseMovement());
+        lockMouse.visibleWhen(() -> !silent() && mouseMovement());
+        mouseMovement.visibleWhen(() -> !totemGuard() && !silent());
+        candidates.visibleWhen(() -> !totemGuard() && !silent());
+        closeDelay.visibleWhen(() -> !totemGuard() && !grimSilent());
     }
 
     @Override
@@ -93,9 +100,9 @@ public final class AutoTotemModule extends Module {
             return;
         }
         if (swapped != 0) {
-            if (GameTime.nanos() - swapped >= closeDelay.get() * 1_000_000L) {
+            if (GameTime.nanos() - swapped >= closeDelayNanos()) {
                 if (silentOpen) closeSilent(client);
-                else if (opened) player.closeContainer();
+                else if (opened) close(client);
                 reset(client);
             }
             return;
@@ -104,7 +111,7 @@ public final class AutoTotemModule extends Module {
         int next = destination(client);
         if (next < 0 || !hasTotem(client, next)) {
             if (silentOpen) closeSilent(client);
-            else if (screen != null && opened) player.closeContainer();
+            else if (screen != null && opened) close(client);
             reset(client);
             return;
         }
@@ -113,7 +120,7 @@ public final class AutoTotemModule extends Module {
             if (!client.getWindow().isFocused()) return;
 
             if (player.isUsingItem()) client.gameMode.releaseUsingItem(player);
-            if (silent.get() && client.gui.screen() == null && player.containerMenu == player.inventoryMenu) {
+            if (silent() && client.gui.screen() == null && player.containerMenu == player.inventoryMenu) {
                 silentOpen = true;
                 if (!grim()) {
                     releasedKeys = true;
@@ -147,13 +154,17 @@ public final class AutoTotemModule extends Module {
             hoverStarted = 0;
             return;
         }
-        if (!silentOpen && mouseMovement.get() && !arrived) {
+        if (!silentOpen && mouseMovement() && !arrived) {
             hoverStarted = 0;
             return;
         }
         long now = GameTime.nanos();
-        if (hoverStarted == 0) hoverStarted = now;
-        if (now - hoverStarted < delay.get() * 1_000_000L) return;
+        if (hoverStarted == 0) {
+            hoverStarted = now;
+            int ms = totemGuard() ? ThreadLocalRandom.current().nextInt(TOTEMGUARD_SPREAD + 1) : delay.get();
+            wait = ms * 1_000_000L;
+        }
+        if (now - hoverStarted < wait) return;
         if (silentOpen && grim()) grimHold = true;
         if (!still()) return;
 
@@ -167,7 +178,7 @@ public final class AutoTotemModule extends Module {
     @EventHandler
     private void onOverlayRender(OverlayRenderEvent event) {
         var client = event.client();
-        if (!mouseMovement.get() || screen == null || target == null || swapped != 0 || client.gui.screen() != screen) return;
+        if (!mouseMovement() || screen == null || target == null || swapped != 0 || client.gui.screen() != screen) return;
         var window = client.getWindow();
         var access = (AbstractContainerScreenInvoker) screen;
         double scaleX = (double) window.getScreenWidth() / window.getGuiScaledWidth();
@@ -196,24 +207,50 @@ public final class AutoTotemModule extends Module {
     }
 
     public boolean locksMouse() {
-        return silentBusy() || isEnabled() && lockMouse.get() && mouseMovement.get() && screen != null && target != null
+        return silentBusy() || isEnabled() && lockMouse.get() && mouseMovement() && screen != null && target != null
                 && swapped == 0 && !Double.isNaN(cursorX);
     }
 
     public boolean holdsInput() {
-        return isEnabled() && (screen != null && swapped == 0 || silentOpen && (!grim() || grimHold));
+        return isEnabled() && (screen != null && (swapped == 0 || totemGuard() && clicked)
+                || silentOpen && (!grim() || grimHold));
     }
 
     public boolean silentBusy() {
         return isEnabled() && silentOpen && !grim();
     }
 
+    public boolean blocksActions() {
+        return silentBusy() || isEnabled() && closedThisTick;
+    }
+
+    private boolean totemGuard() {
+        return mode.get().equals("TotemGuard");
+    }
+
+    private void close(Minecraft client) {
+        if (clicked && totemGuard()) closedThisTick = true;
+        client.player.closeContainer();
+    }
+
     private boolean grim() {
-        return mode.get().equals("Grim");
+        return silentMode.get().equals("Grim");
+    }
+
+    private boolean silent() {
+        return silent.get();
     }
 
     private boolean grimSilent() {
-        return grim() && silent.get();
+        return grim() && silent();
+    }
+
+    private boolean mouseMovement() {
+        return !totemGuard() && mouseMovement.get();
+    }
+
+    private long closeDelayNanos() {
+        return totemGuard() ? 0 : closeDelay.get() * 1_000_000L;
     }
 
     private boolean active() {
@@ -227,6 +264,7 @@ public final class AutoTotemModule extends Module {
     private void closeSilent(Minecraft client) {
         if (clicked && client.player != null && client.getConnection() != null) {
             client.getConnection().send(new ServerboundContainerClosePacket(client.player.inventoryMenu.containerId));
+            if (totemGuard()) closedThisTick = true;
         }
         boolean restore = releasedKeys && client.gui.screen() == null;
         reset(client);
@@ -292,7 +330,8 @@ public final class AutoTotemModule extends Module {
             double dy = (access.paradox$topPos() + slot.y + 8) * scaleY - mouseY;
             return dx * dx + dy * dy;
         }));
-        return totems.get(ThreadLocalRandom.current().nextInt(Math.min(candidates.get(), totems.size())));
+        int pool = totemGuard() ? totems.size() : Math.min(candidates.get(), totems.size());
+        return totems.get(ThreadLocalRandom.current().nextInt(pool));
     }
 
     private boolean still() {
@@ -302,7 +341,9 @@ public final class AutoTotemModule extends Module {
 
     @EventHandler
     private void onPacketSent(PacketSentEvent event) {
-        if (event.packet() instanceof ServerboundPlayerInputPacket input) {
+        if (event.packet() instanceof ServerboundClientTickEndPacket) {
+            closedThisTick = false;
+        } else if (event.packet() instanceof ServerboundPlayerInputPacket input) {
             sentInput = input.input();
         } else if (event.packet() instanceof ServerboundPlayerCommandPacket command) {
             if (command.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING) sentSprint = true;
@@ -315,6 +356,7 @@ public final class AutoTotemModule extends Module {
         var player = Minecraft.getInstance().player;
         sentSprint = player != null && player.isSprinting();
         sentInput = player == null ? Input.EMPTY : player.input.keyPresses;
+        closedThisTick = false;
     }
 
     @Override

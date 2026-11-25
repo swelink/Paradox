@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.DigitAnimation;
 import cc.swelink.renderer.Glass;
@@ -28,14 +29,14 @@ import net.minecraft.util.ARGB;
 public final class SpeedGraphModule extends Module implements PlacedHudElement {
     private static final int SAMPLES = 100;
     private static final float WIDTH = 200;
-    private static final float HEADER_HEIGHT = 28;
+    private static final float HEADER_HEIGHT = UiTokens.PANEL_HEADER_HEIGHT;
     private static final float GRAPH_HEIGHT = 56;
-    private static final float PADDING = 7;
+    private static final float PADDING = UiTokens.PANEL_PADDING;
     private static final float HEIGHT = HEADER_HEIGHT + GRAPH_HEIGHT;
-    private static final float ICON_SIZE = 18;
-    private static final float ICON_GAP = 7;
-    private static final float RADIUS = 10;
-    private static final float FONT_SIZE = 13;
+    private static final float ICON_SIZE = UiTokens.PANEL_ICON;
+    private static final float ICON_GAP = UiTokens.PANEL_ICON_GAP;
+    private static final float RADIUS = UiTokens.RADIUS_PANEL;
+    private static final float FONT_SIZE = UiTokens.TEXT_BODY;
     private static final int SUBDIVISIONS = 4;
     private static final float LINE_WIDTH = 1.6f;
     private static final float SMOOTHING = 0.3f;
@@ -113,7 +114,7 @@ public final class SpeedGraphModule extends Module implements PlacedHudElement {
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 var title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
                 title.draw("Speed", x + PADDING + ICON_SIZE + ICON_GAP,
-                        y + (HEADER_HEIGHT - title.lineHeight(15)) / 2, 15, ThemeColors.text());
+                        y + (HEADER_HEIGHT - title.lineHeight(UiTokens.TEXT_TITLE)) / 2, UiTokens.TEXT_TITLE, ThemeColors.text());
                 long now = System.nanoTime();
                 if (now >= nextValueUpdate) {
                     valueText = String.format(Locale.ROOT, "%.2f bps", Math.max(0, displayed));

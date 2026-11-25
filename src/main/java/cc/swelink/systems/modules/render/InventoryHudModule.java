@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.Paradox;
 import cc.swelink.gui.screens.MenuText;
 import cc.swelink.renderer.FrameClock;
@@ -25,13 +26,13 @@ public final class InventoryHudModule extends Module implements PlacedHudElement
     private static final float SLOT = 20;
     private static final float ITEM_SIZE = 16;
     private static final float SLOT_GAP = 2;
-    private static final float PADDING = 7;
+    private static final float PADDING = UiTokens.PANEL_PADDING;
     private static final float WIDTH = COLUMNS * SLOT + (COLUMNS - 1) * SLOT_GAP + PADDING * 2;
-    private static final float HEADER_HEIGHT = 28;
+    private static final float HEADER_HEIGHT = UiTokens.PANEL_HEADER_HEIGHT;
     private static final float HEIGHT = HEADER_HEIGHT + ROWS * SLOT + (ROWS - 1) * SLOT_GAP + PADDING * 2;
-    private static final float ICON_SIZE = 18;
-    private static final float ICON_GAP = 7;
-    private static final float RADIUS = 10;
+    private static final float ICON_SIZE = UiTokens.PANEL_ICON;
+    private static final float ICON_GAP = UiTokens.PANEL_ICON_GAP;
+    private static final float RADIUS = UiTokens.RADIUS_PANEL;
     private final HudPlacement placement = new HudPlacement(1, 0.2f, false).withCenterSnap();
     private final SpringAnimation visibility = new SpringAnimation();
     private final FrameClock clock = new FrameClock();
@@ -72,9 +73,9 @@ public final class InventoryHudModule extends Module implements PlacedHudElement
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 var title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
                 title.draw("Inventory", x + PADDING + ICON_SIZE + ICON_GAP,
-                        y + (HEADER_HEIGHT - title.lineHeight(15)) / 2, 15, ThemeColors.text());
+                        y + (HEADER_HEIGHT - title.lineHeight(UiTokens.TEXT_TITLE)) / 2, UiTokens.TEXT_TITLE, ThemeColors.text());
                 for (int i = 0; i < COLUMNS * ROWS; i++) {
-                    renderer.sdf.roundedRect(slotX(x, i), slotY(y, i), SLOT, SLOT, 5, ThemeColors.hudHeader());
+                    renderer.sdf.roundedRect(slotX(x, i), slotY(y, i), SLOT, SLOT, UiTokens.RADIUS_CONTROL, ThemeColors.hudHeader());
                 }
             }
             float grow = Math.clamp((reveal - 0.25f) / 0.75f, 0, 1);

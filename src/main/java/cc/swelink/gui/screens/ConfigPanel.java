@@ -1,5 +1,6 @@
 package cc.swelink.gui.screens;
 
+import cc.swelink.renderer.UiTokens;
 import static cc.swelink.gui.screens.ClickGuiDraw.fitLabel;
 import static cc.swelink.gui.screens.ClickGuiDraw.label;
 import static cc.swelink.gui.screens.ClickGuiDraw.mix;
@@ -26,9 +27,9 @@ public final class ConfigPanel {
     static final float ROW_HEIGHT = 28;
     private static final float EDGE = (ROW_HEIGHT - ClickGuiStyle.MODULE_FONT_SIZE * 0.73f) / 2;
     private static final float FONT = ClickGuiStyle.MODULE_FONT_SIZE;
-    private static final float ACTION_FONT = 10.5f;
+    private static final float ACTION_FONT = UiTokens.TEXT_CAPTION;
     private static final float ACTION_GAP = 8;
-    private static final float STATUS_FONT = 10.5f;
+    private static final float STATUS_FONT = UiTokens.TEXT_CAPTION;
     private static final float STATUS_HEIGHT = 20;
     private static final int DELETE_COLOR = 0xFFFF6B6B;
     private static final String[] ACTIONS = {"Save", "Delete"};

@@ -1,5 +1,6 @@
 package cc.swelink.gui.screens;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.SpringAnimation;
 import net.minecraft.client.gui.components.EditBox;
@@ -161,7 +162,7 @@ final class AnimatedInput {
     }
 
     private static void label(Renderer2D renderer, String text, float x, float centerY, int color) {
-        renderer.text.draw(text, x, centerY - renderer.text.lineHeight(13) / 2, 13, color);
+        renderer.text.draw(text, x, centerY - renderer.text.lineHeight(UiTokens.TEXT_BODY) / 2, UiTokens.TEXT_BODY, color);
     }
 
     private static final class Glyph {

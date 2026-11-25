@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.DigitAnimation;
 import cc.swelink.renderer.FrameClock;
@@ -32,16 +33,16 @@ import java.util.Map;
 public final class EffectsModule extends Module implements PlacedHudElement {
     private static final float MIN_WIDTH = 150;
     private static final float MAX_WIDTH = 300;
-    private static final float PADDING = 6;
+    private static final float PADDING = UiTokens.PANEL_PADDING;
     private static final float LIST_PADDING = 4;
-    private static final float HEADER_HEIGHT = 28;
-    private static final float ROW_HEIGHT = 22;
-    private static final float ICON_SIZE = 18;
-    private static final float ICON_GAP = 7;
+    private static final float HEADER_HEIGHT = UiTokens.PANEL_HEADER_HEIGHT;
+    private static final float ROW_HEIGHT = UiTokens.PANEL_ROW_HEIGHT;
+    private static final float ICON_SIZE = UiTokens.PANEL_ICON;
+    private static final float ICON_GAP = UiTokens.PANEL_ICON_GAP;
     private static final float TIMER_GAP = 12;
-    private static final float FONT_SIZE = 13;
-    private static final float TITLE_SIZE = 15;
-    private static final float CORNER_RADIUS = 10;
+    private static final float FONT_SIZE = UiTokens.TEXT_BODY;
+    private static final float TITLE_SIZE = UiTokens.TEXT_TITLE;
+    private static final float CORNER_RADIUS = UiTokens.RADIUS_PANEL;
     private static final int MUTED_TEXT = 0xFFB8B7BE;
     private final HudPlacement placement = new HudPlacement(1, 0.35f, false).withCenterSnap();
     private final SpringAnimation visibility = new SpringAnimation();

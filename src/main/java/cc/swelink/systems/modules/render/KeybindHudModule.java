@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.Glass;
@@ -27,16 +28,16 @@ import java.util.Map;
 public final class KeybindHudModule extends Module implements PlacedHudElement {
     private static final float MIN_WIDTH = 150;
     private static final float MAX_WIDTH = 280;
-    private static final float HEADER_HEIGHT = 28;
-    private static final float ROW_HEIGHT = 22;
-    private static final float PADDING = 7;
-    private static final float ICON_SIZE = 18;
-    private static final float ICON_GAP = 7;
-    private static final float FONT_SIZE = 13;
+    private static final float HEADER_HEIGHT = UiTokens.PANEL_HEADER_HEIGHT;
+    private static final float ROW_HEIGHT = UiTokens.PANEL_ROW_HEIGHT;
+    private static final float PADDING = UiTokens.PANEL_PADDING;
+    private static final float ICON_SIZE = UiTokens.PANEL_ICON;
+    private static final float ICON_GAP = UiTokens.PANEL_ICON_GAP;
+    private static final float FONT_SIZE = UiTokens.TEXT_BODY;
     private static final float BIND_GAP = 14;
     private static final float MAX_BIND_WIDTH = 90;
-    private static final float TITLE_SIZE = 15;
-    private static final float RADIUS = 10;
+    private static final float TITLE_SIZE = UiTokens.TEXT_TITLE;
+    private static final float RADIUS = UiTokens.RADIUS_PANEL;
     private final HudPlacement placement = new HudPlacement(1, 0.6f, false).withCenterSnap();
     private final SpringAnimation visibility = new SpringAnimation();
     private final SpringAnimation widthMotion = new SpringAnimation();

@@ -1,5 +1,6 @@
 package cc.swelink.gui.screens;
 
+import cc.swelink.renderer.UiTokens;
 import static cc.swelink.gui.screens.ClickGuiDraw.clip;
 import static cc.swelink.gui.screens.ClickGuiDraw.fitLabel;
 import static cc.swelink.gui.screens.ClickGuiDraw.inside;
@@ -55,15 +56,15 @@ public class ClickGuiScreen extends Screen {
             Category.MOVEMENT, Category.CLIENT, Category.CONFIG};
 
     private static final float PANEL_WIDTH = 185;
-    private static final float PANEL_RADIUS = 8;
+    private static final float PANEL_RADIUS = UiTokens.RADIUS_WINDOW;
     private static final float HEADER_HEIGHT = 32;
     private static final float PANEL_GAP = 14;
     private static final float ROW_HEIGHT = 28;
-    private static final float KEY_FONT = 9;
+    private static final float KEY_FONT = UiTokens.TEXT_MICRO;
     private static final float KEY_PAD = 5;
     private static final float KEY_HEIGHT = 14;
     private static final int VISIBLE_MODULES = 18;
-    private static final float TITLE_FONT = 15.5f;
+    private static final float TITLE_FONT = UiTokens.TEXT_TITLE;
     private static final float CATEGORY_ICON = 16;
     private static final float CATEGORY_ICON_GAP = 6;
     private static final float SCREEN_MARGIN = 8;
@@ -89,7 +90,7 @@ public class ClickGuiScreen extends Screen {
     private static final float SWITCH_HEIGHT = 10;
     private static final float MODE_BOX_INSET = EDGE;
     private static final float MODE_TEXT_PAD = 5;
-    private static final float MODE_BOX_RADIUS = 4;
+    private static final float MODE_BOX_RADIUS = UiTokens.RADIUS_CONTROL;
     private static final float MODE_ARROW_SPACE = 12;
     private static final float MODE_LABEL = 18;
     private static final float SLIDER_TRACK_Y = 27;
@@ -98,14 +99,14 @@ public class ClickGuiScreen extends Screen {
     private static final float CHIP_HEIGHT = 19;
     private static final float CHIP_PAD = 6;
     private static final float CHIP_GAP = 4;
-    private static final float CHIP_RADIUS = 3;
-    private static final float CHIP_FONT = 9.5f;
-    private static final float PICKER_RADIUS = 6.9f;
+    private static final float CHIP_RADIUS = UiTokens.RADIUS_CONTROL;
+    private static final float CHIP_FONT = UiTokens.TEXT_MICRO;
+    private static final float PICKER_RADIUS = UiTokens.RADIUS_CONTROL;
     private static final float COLOR_FIELD_HEIGHT = 80;
     private static final float HUE_GAP = 8;
     private static final float HUE_HEIGHT = 8;
 
-    private static final float DESCRIPTION_FONT = 11;
+    private static final float DESCRIPTION_FONT = UiTokens.TEXT_CAPTION;
     private static final float DESCRIPTION_PAD = 7;
     private static final float DESCRIPTION_WIDTH = 190;
 
@@ -391,8 +392,9 @@ public class ClickGuiScreen extends Screen {
             float centerY = top + HEADER_HEIGHT / 2;
             float iconX = panel.x + EDGE;
             renderer.textures.icon(panel.category.icon(), iconX, centerY - CATEGORY_ICON / 2, CATEGORY_ICON, ClickGuiStyle.MODULE_TEXT);
-            renderer.text.draw(panel.category.title(), iconX + CATEGORY_ICON + CATEGORY_ICON_GAP,
-                    centerY - renderer.text.lineHeight(TITLE_FONT) / 2, TITLE_FONT, ClickGuiStyle.TITLE);
+            var title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
+            title.draw(panel.category.title(), iconX + CATEGORY_ICON + CATEGORY_ICON_GAP,
+                    centerY - title.lineHeight(TITLE_FONT) / 2, TITLE_FONT, ClickGuiStyle.TITLE);
             drawChevron(renderer, arrowCenter(panel.x), centerY, ARROW_HALF, ARROW_RISE, ARROW_THICKNESS,
                     panel.amount, ClickGuiStyle.ARROW);
             if (body > 0.5f) {
@@ -935,7 +937,8 @@ public class ClickGuiScreen extends Screen {
             panels.remove(i);
             panels.add(panel);
             if (y < panel.y) {
-                if (button == InputConstants.MOUSE_BUTTON_LEFT && Math.abs(x - arrowCenter(panel.x)) <= ARROW_HALF + 4) {
+                if (button == InputConstants.MOUSE_BUTTON_RIGHT
+                        || button == InputConstants.MOUSE_BUTTON_LEFT && Math.abs(x - arrowCenter(panel.x)) <= ARROW_HALF + 4) {
                     panel.open = !panel.open;
                 } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     draggedPanel = panel;

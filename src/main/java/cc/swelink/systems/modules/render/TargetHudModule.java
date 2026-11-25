@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.utils.combat.Targets;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.DigitAnimation;
@@ -29,12 +30,12 @@ public final class TargetHudModule extends Module implements PlacedHudElement {
     private static final float MIN_WIDTH = 172;
     private static final float HEAD_SIZE = 36;
     private static final float HEAD_PANEL_WIDTH = 52;
-    private static final float INFO_PADDING = 8;
+    private static final float INFO_PADDING = UiTokens.PANEL_PADDING;
     private static final float HEIGHT = 52;
     private static final float HEALTH_BAR_HEIGHT = 8;
     private static final float BAR_INSET = 6;
-    private static final float FONT_SIZE = 14;
-    private static final float HEALTH_SIZE = 11;
+    private static final float FONT_SIZE = UiTokens.TEXT_EMPHASIS;
+    private static final float HEALTH_SIZE = UiTokens.TEXT_CAPTION;
     private static final float DAMAGE_DURATION = 0.35f;
     private static final float TRAIL_HOLD = 0.3f;
     private static final int DAMAGE_COLOR = 0xFFFF5252;
@@ -170,7 +171,7 @@ public final class TargetHudModule extends Module implements PlacedHudElement {
     private void drawHud(Renderer2D renderer, AbstractClientPlayer player, float width, float health,
                          float trailingHealth, float damageAge, int edges, DigitAnimation healthDigits, float delta) {
         String name = player.getName().getString();
-        float radius = 10;
+        float radius = UiTokens.RADIUS_PANEL;
         float headRadius = 6;
         renderer.blur.frostedGlass(renderer, Glass.HUD, 0, 0, width, HEIGHT, radius, ThemeColors.hudPanel(),
                 HEAD_PANEL_WIDTH, ThemeColors.hudHeader(), edges);
@@ -191,7 +192,7 @@ public final class TargetHudModule extends Module implements PlacedHudElement {
         float nameHeight = renderer.text.lineHeight(FONT_SIZE);
         float nameY = 5;
         try (var clip = renderer.clips.push(contentX, nameY - 1, contentWidth, nameHeight + 2)) {
-            renderer.text.draw(name, contentX, nameY, FONT_SIZE, 0xFFFFFFFF);
+            renderer.text.draw(name, contentX, nameY, FONT_SIZE, ThemeColors.text());
         }
         float barY = HEIGHT - BAR_INSET - HEALTH_BAR_HEIGHT;
         float barWidth = width - contentX - BAR_INSET;
@@ -216,19 +217,19 @@ public final class TargetHudModule extends Module implements PlacedHudElement {
         float filled = barWidth * health;
         float trailingFilled = barWidth * trailingHealth;
         if (trailingFilled > filled + 0.1f) {
-            renderer.sdf.clippedRoundedRect(contentX, barY, barWidth, HEALTH_BAR_HEIGHT, 3, DAMAGE_COLOR,
+            renderer.sdf.clippedRoundedRect(contentX, barY, barWidth, HEALTH_BAR_HEIGHT, HEALTH_BAR_HEIGHT / 2, DAMAGE_COLOR,
                     contentX + filled, barY - 1, contentX + trailingFilled + (trailingHealth >= 1 ? 1 : 0),
                     barY + HEALTH_BAR_HEIGHT + 1);
         }
         if (filled > 0) {
-            renderer.sdf.clippedRoundedRect(contentX, barY, barWidth, HEALTH_BAR_HEIGHT, 3, ThemeColors.primary(),
+            renderer.sdf.clippedRoundedRect(contentX, barY, barWidth, HEALTH_BAR_HEIGHT, HEALTH_BAR_HEIGHT / 2, ThemeColors.primary(),
                     contentX - 1, barY - 1, contentX + filled + (health >= 1 ? 1 : 0), barY + HEALTH_BAR_HEIGHT + 1);
         }
     }
 
     @Override
     public float cornerRadius() {
-        return 10;
+        return UiTokens.RADIUS_PANEL;
     }
 
     @Override

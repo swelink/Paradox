@@ -63,7 +63,7 @@ void main() {
     scene = mix(vec3(luminance), scene, 0.78);
     scene = (scene - 0.5) * 0.85 + 0.5;
     bool hudPanel = cornerMode || solidPanel.w != 0.0;
-    float tintStrength = hudPanel ? 0.62 * glassOpacity : 0.80;
+    float tintStrength = hudPanel ? 0.45 * glassOpacity : 0.60;
     float sceneStrength = hudPanel ? 0.55 : 0.5;
     vec3 glass = mix(scene * sceneStrength, vertexColor.rgb, tintStrength);
     float grain = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));

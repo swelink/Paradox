@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.Paradox;
 import cc.swelink.events.EventHandler;
 import cc.swelink.events.PacketSentEvent;
@@ -27,12 +28,12 @@ import net.minecraft.util.ARGB;
 public final class KeystrokesModule extends Module implements PlacedHudElement {
     private static final float GAP = 2;
     private static final float KEY_SIZE = 36;
-    private static final float KEY_RADIUS = 5;
+    private static final float KEY_RADIUS = UiTokens.RADIUS_CONTROL;
     private static final float SPACE_HEIGHT = 20;
     private static final float WIDTH = KEY_SIZE * 3 + GAP * 2;
     private static final float HEIGHT = KEY_SIZE * 3 + SPACE_HEIGHT + GAP * 3;
-    private static final float FONT_SIZE = 13;
-    private static final float SMALL_FONT_SIZE = 11;
+    private static final float FONT_SIZE = UiTokens.TEXT_BODY;
+    private static final float SMALL_FONT_SIZE = UiTokens.TEXT_CAPTION;
     private static final float DOT_SIZE = 6;
     private static final float MOUSE_RANGE = 12;
     private static final int TRAIL_SAMPLES = 256;

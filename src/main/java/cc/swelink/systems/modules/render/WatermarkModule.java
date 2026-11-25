@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.Glass;
 import cc.swelink.renderer.DigitAnimation;
@@ -35,9 +36,9 @@ import java.time.format.DateTimeFormatter;
 public final class WatermarkModule extends Module implements PlacedHudElement {
     private final LatencyTracker latencyTracker = new LatencyTracker();
     private static final float HEIGHT = 30;
-    private static final float FONT_SIZE = 15;
+    private static final float FONT_SIZE = UiTokens.TEXT_TITLE;
     private static final float CORNER_RADIUS = 15;
-    private static final float PADDING = 12;
+    private static final float PADDING = UiTokens.SPACE_M;
     private static final float ICON_SIZE = 14;
     private static final float ICON_GAP = 6;
     private static final float BOX_GAP = 5;

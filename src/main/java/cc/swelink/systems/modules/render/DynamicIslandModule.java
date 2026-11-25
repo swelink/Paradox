@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.Paradox;
 import cc.swelink.events.EventHandler;
 import cc.swelink.events.ModuleToggleEvent;
@@ -32,8 +33,8 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
     private static final float HEIGHT = 30;
     private static final float EXPANDED_HEIGHT = 50;
     private static final float RADIUS = 15;
-    private static final float PADDING = 12;
-    private static final float FONT_SIZE = 15;
+    private static final float PADDING = UiTokens.SPACE_M;
+    private static final float FONT_SIZE = UiTokens.TEXT_TITLE;
     private static final float DETAIL_GAP = 12;
     private static final float TIMED_WIDTH = 150;
     private static final float BAR_INSET = 8;
@@ -52,7 +53,8 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
     private static final float LOGO_V1 = 771 / 1024f;
     private static final float LOGO_ASPECT = 840 / 518f;
     private static final float LOGO_GAP = 6;
-    private static final float LOGO_HEIGHT = 11;
+    private static final float LOGO_HEIGHT = 15;
+    private static final float LOGO_INSET = (HEIGHT - LOGO_HEIGHT) / 2;
     private final HudPlacement placement = new HudPlacement(0.5f, 0.016f, false).withCenterSnap();
     private final HudPopAnimation enablePop = new HudPopAnimation(true);
     private final FrameClock clock = new FrameClock();
@@ -186,7 +188,7 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
         try (var renderer = new Renderer2D(graphics)) {
             TextRenderer title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
             float logoWidth = LOGO_HEIGHT * LOGO_ASPECT;
-            float contentLeft = PADDING + logoWidth + LOGO_GAP;
+            float contentLeft = LOGO_INSET + logoWidth + LOGO_GAP;
             float digitWidth = 0;
             for (int digit = 0; digit <= 9; digit++) {
                 digitWidth = Math.max(digitWidth, renderer.text.measure(Integer.toString(digit), FONT_SIZE).width());
@@ -247,9 +249,8 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
 
             float titleTop = title.topInBox(y, HEIGHT, FONT_SIZE);
             float textTop = renderer.text.topInBox(y, HEIGHT, FONT_SIZE);
-            float baseline = titleTop + title.ascent(FONT_SIZE);
-            float logoX = x + PADDING;
-            float logoY = baseline - LOGO_HEIGHT;
+            float logoX = x + LOGO_INSET;
+            float logoY = y + (HEIGHT - LOGO_HEIGHT) / 2;
             renderer.textures.iconRegion(LOGO, logoX, logoY, logoWidth, LOGO_HEIGHT,
                     LOGO_U0, LOGO_V0, LOGO_U1, LOGO_V1, ThemeColors.primary());
 

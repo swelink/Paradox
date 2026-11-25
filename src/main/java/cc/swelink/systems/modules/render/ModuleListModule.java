@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.Paradox;
 import cc.swelink.renderer.FrameClock;
 import cc.swelink.renderer.BlurRenderer;
@@ -29,7 +30,7 @@ import java.util.Set;
 
 public final class ModuleListModule extends Module implements PlacedHudElement {
     private static final Set<String> HIDDEN_MODES = Set.of("Rotation", "Movefix mode");
-    private static final float FONT_SIZE = 11;
+    private static final float FONT_SIZE = UiTokens.TEXT_CAPTION;
     private static final float BOX_HEIGHT = 15;
     private static final float GAP = 0;
     private static final float ROW_HEIGHT = BOX_HEIGHT + GAP;

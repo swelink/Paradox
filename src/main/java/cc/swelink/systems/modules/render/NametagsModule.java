@@ -1,5 +1,6 @@
 package cc.swelink.systems.modules.render;
 
+import cc.swelink.renderer.UiTokens;
 import cc.swelink.events.EventHandler;
 import cc.swelink.events.OverlayRenderEvent;
 import cc.swelink.renderer.DigitAnimation;
@@ -36,10 +37,10 @@ import java.util.List;
 import java.util.Optional;
 
 public final class NametagsModule extends Module {
-    public static final float FONT_SIZE = 15;
+    public static final float FONT_SIZE = UiTokens.TEXT_TITLE;
     private static final float PADDING = 7;
     private static final float HEIGHT = 22;
-    private static final float CORNER_RADIUS = 6;
+    private static final float CORNER_RADIUS = UiTokens.RADIUS_CONTROL;
     private static final float ICON_SIZE = 14;
     private static final float ICON_GAP = 5;
     private static final float MAX_DISTANCE_SCALE = 4;

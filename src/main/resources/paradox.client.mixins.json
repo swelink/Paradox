@@ -75,6 +75,8 @@
     "ArrowTrajectoryAccessor",
     "ProjectileTrajectoryAccessor",
     "KeyMappingAccessor",
+    "RenderTypeAccessor",
+    "SubmitNodeCollectionOitMixin",
     "AbstractContainerScreenInvoker",
     "MouseHandlerAccessor",
     "GuiModuleListMixin",

@@ -2,12 +2,14 @@ package cc.swelink.systems.modules.combat;
 
 import cc.swelink.settings.BooleanSetting;
 import cc.swelink.settings.IntSetting;
+import cc.swelink.settings.RaycastSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.utils.combat.AttackUtils;
 import cc.swelink.utils.player.Gameplay;
 import cc.swelink.utils.player.InventoryUtils;
 import cc.swelink.utils.player.SlotSelection;
+import cc.swelink.utils.rotation.RotationRaycast;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -26,6 +28,7 @@ public final class AutoCrystalModule extends Module {
     private final IntSetting placeDelay = addSetting(new IntSetting("Place delay", 1, 1, 20));
     private final IntSetting breakDelay = addSetting(new IntSetting("Break delay", 1, 1, 20));
     private final BooleanSetting obby = addSetting(new BooleanSetting("Obby", false));
+    private final RaycastSetting raycast = addSetting(new RaycastSetting());
     private long ticks;
     private long switchTick;
     private long nextPlace;
@@ -62,7 +65,7 @@ public final class AutoCrystalModule extends Module {
             selectedSlot = currentSlot;
         }
 
-        HitResult inputHit = client.hitResult;
+        HitResult inputHit = raycast.target() ? targetHit(client) : client.hitResult;
         if (inputHit instanceof EntityHitResult hit && hit.getEntity() instanceof EndCrystal crystal) {
             if (ticks >= nextBreak && crystal.isAlive() && AttackUtils.isInRange(player, hit)) {
                 var stack = player.getMainHandItem();
@@ -93,6 +96,19 @@ public final class AutoCrystalModule extends Module {
         } else if (pendingObby && obby.get() && ticks >= nextPlace) {
             placeObsidian(client, hit);
         }
+    }
+
+    private static HitResult targetHit(Minecraft client) {
+        var player = client.player;
+        var rotation = RotationRaycast.interactionRotation(client, 1);
+        HitResult crystal = RotationRaycast.entities(rotation, player.entityInteractionRange(),
+                entity -> entity instanceof EndCrystal && entity.isAlive());
+        if (crystal != null) {
+            return crystal;
+        }
+        HitResult base = RotationRaycast.firstBlock(rotation, player.blockInteractionRange(),
+                CrystalAuraModule::base);
+        return base != null ? base : client.hitResult;
     }
 
     static boolean canPlaceCrystal(Minecraft client, BlockPos base) {

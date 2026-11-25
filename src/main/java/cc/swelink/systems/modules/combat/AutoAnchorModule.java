@@ -4,11 +4,13 @@ import cc.swelink.Paradox;
 import cc.swelink.events.EventHandler;
 import cc.swelink.events.PreTickEvent;
 import cc.swelink.settings.IntSetting;
+import cc.swelink.settings.RaycastSetting;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.utils.player.Gameplay;
 import cc.swelink.utils.player.InventoryUtils;
 import cc.swelink.utils.player.SlotSelection;
+import cc.swelink.utils.rotation.RotationRaycast;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -27,6 +29,7 @@ public final class AutoAnchorModule extends Module {
     private final IntSetting placeDelay = addSetting(new IntSetting("Place delay", 1, 1, 20));
     private final IntSetting switchDelay = addSetting(new IntSetting("Switch delay", 1, 0, 20));
     private final IntSetting explodeSlot = addSetting(new IntSetting("Explode slot", 1, 1, 9).bounded());
+    private final RaycastSetting raycast = addSetting(new RaycastSetting());
     private ClientLevel level;
     private BlockPos anchor;
     private boolean waitingForRemoval;
@@ -133,7 +136,9 @@ public final class AutoAnchorModule extends Module {
     }
 
     private boolean act(Minecraft client, LocalPlayer player, SafeAnchorModule safeAnchor) {
-        if (!(client.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK
+        HitResult target = raycast.target() ? RotationRaycast.firstBlock(RotationRaycast.interactionRotation(client, 1),
+                player.blockInteractionRange(), block -> block.is(Blocks.RESPAWN_ANCHOR)) : client.hitResult;
+        if (!(target instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK
                 || !player.isWithinBlockInteractionRange(hit.getBlockPos(), 0)) return false;
         var state = level.getBlockState(hit.getBlockPos());
         if (!state.is(Blocks.RESPAWN_ANCHOR)

@@ -13,7 +13,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -136,6 +138,22 @@ public final class RotationRaycast {
         }
         Vec3 delta = to.subtract(from);
         return BlockHitResult.miss(to, Direction.getApproximateNearest(delta.x, delta.y, delta.z), BlockPos.containing(to));
+    }
+
+    public static BlockHitResult firstBlock(Rotation rotation, double range, Predicate<BlockState> predicate) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || minecraft.level == null) {
+            return null;
+        }
+        Vec3 eyes = minecraft.player.getEyePosition();
+        Vec3 end = eyes.add(rotation.direction().scale(range));
+        return BlockGetter.traverseBlocks(eyes, end, minecraft.level, (level, pos) -> {
+            if (!predicate.test(level.getBlockState(pos))) {
+                return null;
+            }
+            BlockHitResult hit = block(eyes, end, pos.immutable());
+            return hit.getType() == HitResult.Type.BLOCK ? hit : null;
+        }, level -> null);
     }
 
     public static EntityHitResult entities(Rotation rotation, double range, Predicate<Entity> predicate) {

@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import org.joml.Matrix3f;
 
 public final class HandShadersModule extends Module {
     private final GlowSettings shader = new GlowSettings(this::addSetting, () -> true, 0);
@@ -23,8 +24,8 @@ public final class HandShadersModule extends Module {
             return value + "ms";
         }
     });
-    private float lastYaw;
-    private float lastPitch;
+    private float lastSwayX;
+    private float lastSwayY;
     private long lastFrame;
     private final HandShaderRenderer renderer = new HandShaderRenderer();
 
@@ -69,25 +70,27 @@ public final class HandShadersModule extends Module {
 
     private void configureTrail(PostChain chain) {
         var client = Minecraft.getInstance();
-        var camera = client.gameRenderer.mainCamera();
+        var player = client.player;
         long now = System.nanoTime();
         float delta = lastFrame == 0 ? 1 : (now - lastFrame) * 1e-9f;
-        float yaw = camera.yRot();
-        float pitch = camera.xRot();
-        float focal = 2 * (float) Math.tan(Math.toRadians(camera.getFov()) / 2);
-        float aspect = client.getWindow().getWidth() / (float) Math.max(1, client.getWindow().getHeight());
-        float shiftU = (float) Math.toRadians(Mth.wrapDegrees(yaw - lastYaw)) / (focal * aspect);
-        float shiftV = (float) -Math.toRadians(pitch - lastPitch) / focal;
-        float fade = delta * 1000 / trailFade.get();
-        if (delta > 0.25f || Math.abs(shiftU) > 0.5f || Math.abs(shiftV) > 0.5f) {
-            fade = 1;
-            shiftU = 0;
-            shiftV = 0;
+        float fade = delta > 0.25f ? 1 : delta * 1000 / trailFade.get();
+        float partial = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        float swayX = (player.getViewXRot(partial) - Mth.lerp(partial, player.xBobO, player.xBob)) * 0.1f;
+        float swayY = (player.getViewYRot(partial) - Mth.lerp(partial, player.yBobO, player.yBob)) * 0.1f;
+        var motion = new Matrix3f();
+        if (fade < 1) {
+            var current = new Matrix3f().rotateX((float) Math.toRadians(swayX)).rotateY((float) Math.toRadians(swayY));
+            motion.rotateX((float) Math.toRadians(lastSwayX)).rotateY((float) Math.toRadians(lastSwayY)).mul(current.invert());
         }
-        lastYaw = yaw;
-        lastPitch = pitch;
+        float tangent = (float) Math.tan(Math.toRadians(35));
+        float aspect = client.getWindow().getWidth() / (float) Math.max(1, client.getWindow().getHeight());
+        lastSwayX = swayX;
+        lastSwayY = swayY;
         lastFrame = now;
-        PostEffectUtils.writeUniform(chain, "TrailConfig", shiftU, shiftV, fade, 0);
+        PostEffectUtils.writeUniform(chain, "TrailConfig", 0, 0, fade, 0,
+                motion.m00, motion.m10, motion.m20, tangent * aspect,
+                motion.m01, motion.m11, motion.m21, tangent,
+                motion.m02, motion.m12, motion.m22, 0);
     }
 
     @Override

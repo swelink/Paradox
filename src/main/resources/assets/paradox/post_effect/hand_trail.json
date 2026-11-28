@@ -5,11 +5,11 @@
     "glow_v1": {},
     "glow_h2": {},
     "glow_v2": {},
-    "glow_composite": {},
     "trail_history": {
       "persistent": true
     },
-    "trail_next": {}
+    "trail_next": {},
+    "trail_premult": {}
   },
   "passes": [
     {
@@ -26,11 +26,107 @@
     },
     {
       "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/hand_trail",
+      "inputs": [
+        {
+          "sampler_name": "Mask",
+          "target": "hand_mask"
+        },
+        {
+          "sampler_name": "History",
+          "target": "trail_history",
+          "bilinear": true
+        }
+      ],
+      "output": "trail_next",
+      "uniforms": {
+        "TrailConfig": [
+          {
+            "name": "Motion",
+            "type": "vec4",
+            "value": [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ]
+          },
+          {
+            "name": "Row0",
+            "type": "vec4",
+            "value": [
+              1.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          {
+            "name": "Row1",
+            "type": "vec4",
+            "value": [
+              0.0,
+              1.0,
+              0.0,
+              1.0
+            ]
+          },
+          {
+            "name": "Row2",
+            "type": "vec4",
+            "value": [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "minecraft:post/blit",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "trail_next"
+        }
+      ],
+      "output": "trail_history",
+      "uniforms": {
+        "BlitConfig": [
+          {
+            "name": "ColorModulate",
+            "type": "vec4",
+            "value": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "paradox:post/hand_trail_shape",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "trail_next"
+        }
+      ],
+      "output": "trail_premult"
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
       "fragment_shader": "paradox:post/glow_blur",
       "inputs": [
         {
           "sampler_name": "In",
-          "target": "hand_mask",
+          "target": "trail_premult",
           "bilinear": true
         }
       ],
@@ -738,144 +834,45 @@
     },
     {
       "vertex_shader": "minecraft:core/screenquad",
-      "fragment_shader": "paradox:post/glow",
-      "inputs": [
-        {
-          "sampler_name": "In",
-          "target": "hand_mask"
-        },
-        {
-          "sampler_name": "Glow",
-          "target": "glow_v2",
-          "bilinear": true
-        }
-      ],
-      "output": "glow_composite",
-      "uniforms": {
-        "GlowConfig": [
-          {
-            "name": "Settings",
-            "type": "vec4",
-            "value": [
-              1.0,
-              0.12,
-              1.0,
-              0.0
-            ]
-          }
-        ],
-        "GlowTint": [
-          {
-            "name": "Tint",
-            "type": "vec4",
-            "value": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "vertex_shader": "minecraft:core/screenquad",
-      "fragment_shader": "paradox:post/hand_trail",
-      "inputs": [
-        {
-          "sampler_name": "Glow",
-          "target": "glow_v2",
-          "bilinear": true
-        },
-        {
-          "sampler_name": "History",
-          "target": "trail_history",
-          "bilinear": true
-        }
-      ],
-      "output": "trail_next",
-      "uniforms": {
-        "TrailConfig": [
-          {
-            "name": "Motion",
-            "type": "vec4",
-            "value": [
-              0.0,
-              0.0,
-              1.0,
-              0.0
-            ]
-          }
-        ],
-        "GlowConfig": [
-          {
-            "name": "Settings",
-            "type": "vec4",
-            "value": [
-              1.0,
-              0.12,
-              1.0,
-              0.0
-            ]
-          }
-        ],
-        "GlowTint": [
-          {
-            "name": "Tint",
-            "type": "vec4",
-            "value": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "vertex_shader": "minecraft:core/screenquad",
-      "fragment_shader": "minecraft:post/blit",
-      "inputs": [
-        {
-          "sampler_name": "In",
-          "target": "trail_next"
-        }
-      ],
-      "output": "trail_history",
-      "uniforms": {
-        "BlitConfig": [
-          {
-            "name": "ColorModulate",
-            "type": "vec4",
-            "value": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "vertex_shader": "minecraft:core/screenquad",
       "fragment_shader": "paradox:post/hand_trail_resolve",
       "inputs": [
         {
           "sampler_name": "In",
-          "target": "glow_composite"
-        },
-        {
-          "sampler_name": "Trail",
           "target": "trail_next"
         },
         {
-          "sampler_name": "Mask",
-          "target": "hand_mask"
+          "sampler_name": "Glow",
+          "target": "glow_v2",
+          "bilinear": true
         }
       ],
-      "output": "minecraft:main"
+      "output": "minecraft:main",
+      "uniforms": {
+        "GlowConfig": [
+          {
+            "name": "Settings",
+            "type": "vec4",
+            "value": [
+              1.0,
+              0.12,
+              1.0,
+              0.0
+            ]
+          }
+        ],
+        "GlowTint": [
+          {
+            "name": "Tint",
+            "type": "vec4",
+            "value": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        ]
+      }
     }
   ]
 }

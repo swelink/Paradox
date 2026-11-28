@@ -597,11 +597,12 @@ public class ClickGuiScreen extends Screen {
                 float boxHeight = SETTING_ROW_HEIGHT
                         + mode.choices().size() * SETTING_ROW_HEIGHT * settingAnimation(row.setting()).dropdown;
                 float visibleBottom = groupY + row.groupHeight();
-                if (visibleBottom > boxTop) {
-                    renderer.sdf.clippedRoundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
-                            ClickGuiStyle.CONTROL, boxX, boxTop, boxX + boxWidth, visibleBottom);
-                }
                 float optionsTop = boxTop + SETTING_ROW_HEIGHT;
+                float headerBottom = visibleBottom > optionsTop + 0.5f ? optionsTop : visibleBottom;
+                if (headerBottom > boxTop) {
+                    renderer.sdf.clippedRoundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
+                            ClickGuiStyle.CONTROL, boxX, boxTop, boxX + boxWidth, headerBottom);
+                }
                 if (visibleBottom > optionsTop + 0.5f) {
                     renderer.sdf.clippedRoundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
                             ClickGuiStyle.CONTROL_DARK, boxX, optionsTop, boxX + boxWidth, visibleBottom);

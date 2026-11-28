@@ -21,7 +21,6 @@ import cc.swelink.utils.hud.HudPlacement;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -68,6 +67,7 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
     public DynamicIslandModule() {
         super("DynamicIsland", "Paradox island with notifications", Category.RENDER);
         placement.restore(0.5f, 0.016f, 1, true);
+        setEnabled(true);
     }
 
     public void toggled(Module module, boolean enabled) {
@@ -155,7 +155,6 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
 
     @Override
     public void render(Minecraft client, GuiGraphicsExtractor graphics) {
-        if (!super.isEnabled()) setEnabled(true);
         draw(client, graphics);
     }
 
@@ -332,26 +331,6 @@ public final class DynamicIslandModule extends Module implements PlacedHudElemen
         placement.clearSize();
         stopDragging();
         clock.reset();
-    }
-
-    @Override
-    public boolean visibleForDragging() {
-        return false;
-    }
-
-    @Override
-    public boolean mouseClicked(MouseButtonEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean mouseDragged(MouseButtonEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
-        return false;
     }
 
     @Override

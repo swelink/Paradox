@@ -32,7 +32,6 @@ import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
 import cc.swelink.systems.modules.ModuleManager;
 import cc.swelink.systems.modules.combat.AutoAnchorModule;
-import cc.swelink.systems.modules.render.DynamicIslandModule;
 import cc.swelink.systems.modules.render.PostProcessingModule;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -360,7 +359,7 @@ public class ClickGuiScreen extends Screen {
     }
 
     private static boolean inHudEditor(Module module) {
-        return module instanceof HudElement && !(module instanceof DynamicIslandModule);
+        return module instanceof HudElement;
     }
 
     public void carryWindow() {
@@ -910,7 +909,7 @@ public class ClickGuiScreen extends Screen {
     private List<Row> rows(Panel panel) {
         List<Row> rows = new ArrayList<>();
         for (Module module : manager.modules()) {
-            if (module instanceof DynamicIslandModule || !belongs(panel, module)) continue;
+            if (!belongs(panel, module)) continue;
             rows.add(Row.module(module, ROW_HEIGHT));
             float amount = moduleAnimation(module).open;
             if (amount <= 0) continue;

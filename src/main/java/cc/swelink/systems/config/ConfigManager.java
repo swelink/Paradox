@@ -148,7 +148,7 @@ public final class ConfigManager {
                 for (var entry : settings(module).entrySet()) {
                     if (savedSettings.has(entry.getKey())) changes.add(change(entry.getValue(), savedSettings.get(entry.getKey())));
                 }
-                if (!(module instanceof DynamicIslandModule) && module instanceof PlacedHudElement hud && data.has("hud")) {
+                if (module instanceof PlacedHudElement hud && data.has("hud")) {
                     var placement = data.getAsJsonObject("hud");
                     float horizontal = number(placement.get("horizontal"), 0, 1);
                     float vertical = number(placement.get("vertical"), -1, 1);

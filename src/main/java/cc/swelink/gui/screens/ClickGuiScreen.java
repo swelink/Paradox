@@ -77,6 +77,9 @@ public class ClickGuiScreen extends Screen {
     private static final int BACKGROUND_BLUR_DOWNSAMPLE = 4;
     private static final int BACKGROUND_BLUR_PASSES = 4;
     private static final float CORNER_SLICE = 1;
+    private static final float SEPARATOR_SLICE = 4;
+    private static final float SEPARATOR_HEIGHT = 1;
+    private static final float SEPARATOR_OFFSET = -SEPARATOR_HEIGHT / 2;
     private static final float POP_SPEED = 20;
     private static final float WINDOW_FAR = 0.08f;
     private static final float CLOSED = 0.03f;
@@ -432,9 +435,25 @@ public class ClickGuiScreen extends Screen {
                         drawBody(renderer, panel, rows, body, mouseX, mouseY);
                     }
                 }
+                float separatorY = panel.y + SEPARATOR_OFFSET;
+                renderer.opacity(opacity * Math.clamp(body / ROW_HEIGHT, 0, 1));
+                drawSeparator(renderer, panel.x, separatorY);
             }
         } finally {
             renderer.opacity(1);
+        }
+    }
+
+    private void drawSeparator(Renderer2D renderer, float x, float y) {
+        int first = ThemeColors.primary();
+        int second = ThemeColors.secondary();
+        float phase = ThemeColors.wavePhase();
+        for (float sliceX = x; sliceX < x + PANEL_WIDTH; sliceX += SEPARATOR_SLICE) {
+            float sliceRight = Math.min(sliceX + SEPARATOR_SLICE, x + PANEL_WIDTH);
+            int left = ThemeColors.wave(first, second, sliceX, phase);
+            int right = ThemeColors.wave(first, second, sliceRight, phase);
+            renderer.gradient(sliceX, y - SEPARATOR_HEIGHT / 2, sliceRight - sliceX, SEPARATOR_HEIGHT,
+                    left, left, right, right, false);
         }
     }
 

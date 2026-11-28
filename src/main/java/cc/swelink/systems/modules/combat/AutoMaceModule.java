@@ -38,7 +38,7 @@ import java.util.function.Predicate;
 
 public final class AutoMaceModule extends Module {
     private final BooleanSetting shieldBreaker = addSetting(new BooleanSetting("Shield breaker", true));
-    private final IntSetting switchDelay = addSetting(new IntSetting("Switch delay", 1, 0, 20));
+    private final IntSetting switchDelay = addSetting(new IntSetting("Switch delay", 1, 1, 20));
     private final IntSetting swapBackDelay = addSetting(new IntSetting("Swap back delay", 2, 1, 20));
     private final IntSetting range = addSetting(new IntSetting("Range", 6, 1, 6));
     private final IntSetting fov = addSetting(new IntSetting("FOV", 360, 10, 360));
@@ -149,9 +149,7 @@ public final class AutoMaceModule extends Module {
             }
             waitingForMace = true;
             switchTick = ticks + switchDelay.get();
-            if (switchDelay.get() > 0) {
-                return;
-            }
+            return;
         }
         attackMace(client);
     }

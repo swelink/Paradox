@@ -61,10 +61,6 @@ public final class EspModule extends Module {
         return ThemeColors.primary();
     }
 
-    public TwoDEsp boxes() {
-        return twoDimensional;
-    }
-
     public GlowEsp glow() {
         return glow;
     }

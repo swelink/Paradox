@@ -108,7 +108,7 @@ void main() {
     float coverage=1.0-smoothstep(-aa*0.5,aa*0.5,distance);
     if(params.w==4.0) coverage=1.0-coverage;
     if(params.w==1.0) coverage*=smoothstep(-params.y-aa*0.5,-params.y+aa*0.5,distance);
-    bool blurredFill = params.w == 2.0 || backdropShadow;
+    bool blurredFill = backdropShadow;
     if (blurredFill) {
         float sigma = max(params.z, 0.001);
         vec2 point = localPosition - (backdropShadow ? vec2(0.0, sigma * 0.45) : vec2(0.0));

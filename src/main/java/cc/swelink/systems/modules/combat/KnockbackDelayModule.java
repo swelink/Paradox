@@ -200,10 +200,6 @@ public final class KnockbackDelayModule extends Module {
         return Math.max(minDelay.get(), maxDelay.get()) + releaseTime.get();
     }
 
-    public boolean holding() {
-        return !packets.isEmpty();
-    }
-
     private void reset() {
         serverPositions.clear();
         attack = 0;

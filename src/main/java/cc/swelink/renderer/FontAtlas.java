@@ -107,14 +107,6 @@ final class FontAtlas {
         return glyphs.getOrDefault(codepoint, glyphs.get((int) '?'));
     }
 
-    int[] pixels() {
-        try (var input = resource(".png"); var image = NativeImage.read(input)) {
-            return image.getPixels();
-        } catch (IOException exception) {
-            throw new IllegalStateException("Cannot read MSDF font: " + fontName, exception);
-        }
-    }
-
     GpuTextureView textureView() {
         if (view != null) return view;
         var device = RenderSystem.getDevice();

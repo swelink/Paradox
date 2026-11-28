@@ -161,18 +161,11 @@ public final class HudPlacement {
 
     public float x() { return x; }
     public float y() { return y; }
-    public float screenWidth() { return screenWidth; }
-    public float screenHeight() { return screenHeight; }
     public boolean lowerHalf() { return vertical > 0.5f; }
     public boolean alignLeft() { return horizontalAnchor ? leftAligned : horizontal < 0.5f; }
 
     public int touchedEdges() {
         return 0;
-    }
-
-    public void setPosition(float x, float y) {
-        this.x = x;
-        this.y = y;
     }
 
     public void clearSize() {

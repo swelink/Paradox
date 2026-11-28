@@ -182,10 +182,6 @@ public final class RotationManager {
         useAfterMovement = true;
     }
 
-    public Rotation usedRotation() {
-        return usedRotation;
-    }
-
     public void movementSent() {
         useAfterMovement = false;
         movedThisTick = true;

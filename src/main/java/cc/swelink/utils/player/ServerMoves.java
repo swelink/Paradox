@@ -21,10 +21,6 @@ public final class ServerMoves {
     private ServerMoves() {
     }
 
-    public synchronized boolean armed() {
-        return !known || armed;
-    }
-
     private boolean fires(double x, double y, double z, float yaw, float pitch) {
         double dx = lx - x, dy = ly - y, dz = lz - z;
         return dx * dx + dy * dy + dz * dz > 0.00390625 || Math.abs(lYaw - yaw) + Math.abs(lPitch - pitch) > 10;

@@ -108,26 +108,6 @@ public final class Renderer2D implements AutoCloseable {
         });
     }
 
-    public void area(float[] xs, float[] ys, int count, float bottom, int color) {
-        if (count < 2) return;
-        float left = xs[0];
-        float right = xs[0];
-        float top = bottom;
-        for (int i = 0; i < count; i++) {
-            left = Math.min(left, xs[i]);
-            right = Math.max(right, xs[i]);
-            top = Math.min(top, ys[i]);
-        }
-        submit(RenderPipelines.GUI, TextureSetup.noTexture(), left, top, right - left, bottom - top, (vertices, pose) -> {
-            for (int i = 0; i + 1 < count; i++) {
-                vertices.addVertexWith2DPose(pose, xs[i], ys[i]).setColor(color);
-                vertices.addVertexWith2DPose(pose, xs[i], bottom).setColor(color);
-                vertices.addVertexWith2DPose(pose, xs[i + 1], bottom).setColor(color);
-                vertices.addVertexWith2DPose(pose, xs[i + 1], ys[i + 1]).setColor(color);
-            }
-        });
-    }
-
     public float pixelSize() {
         var current = graphics.pose();
         float scale = (float) Math.sqrt(Math.abs(current.m00() * current.m11() - current.m01() * current.m10()));

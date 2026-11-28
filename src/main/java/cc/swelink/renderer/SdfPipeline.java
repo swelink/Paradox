@@ -9,7 +9,6 @@ import org.joml.Matrix3x2fc;
 public final class SdfPipeline {
     private static final int FILL = 0;
     private static final int BORDER = 1;
-    private static final int SHADOW = 2;
     private static final int CUTOUT = 4;
     private static final int BACKDROP_SHADOW = 5;
     private static final int DOCKED_BORDER = 6;
@@ -32,10 +31,6 @@ public final class SdfPipeline {
 
     public static float corner(float radius) {
         return corner(radius, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
-    }
-
-    public void rect(float x, float y, float width, float height, int color) {
-        roundedRect(x, y, width, height, 0, color);
     }
 
     public void roundedRect(float x, float y, float width, float height, float radius, int color) {
@@ -203,12 +198,6 @@ public final class SdfPipeline {
         }
     }
 
-    public void shadow(float x, float y, float width, float height, float radius, float sigma, int color) {
-        if (sigma > 0) {
-            shape(x, y, width, height, corner(radius, width, height), 0, sigma, color, SHADOW);
-        }
-    }
-
     public void clippedBackdropShadow(float x, float y, float width, float height, float radius, float sigma, int color,
                                       float left, float top, float right, float bottom) {
         if (sigma > 0) {
@@ -233,7 +222,7 @@ public final class SdfPipeline {
         int encodedRadius = fixed(Math.min(radius, maxRadius));
         int encodedBorder = fixed(Math.min(border, maxRadius));
         int encodedSigma = fixed(sigma);
-        float padding = shapeType == BACKDROP_SHADOW ? sigma * 4.5f + 2 : shapeType == SHADOW ? sigma * 4 + 2 : 1;
+        float padding = shapeType == BACKDROP_SHADOW ? sigma * 4.5f + 2 : 1;
         float x1 = Math.max(x - padding, left);
         float y1 = Math.max(y - padding, top);
         float x2 = Math.min(x + width + padding, right);

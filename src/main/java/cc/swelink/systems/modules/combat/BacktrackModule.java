@@ -213,10 +213,6 @@ public final class BacktrackModule extends Module {
         return targetMode.get().equals("Attack") ? Math.max(delayLimit, afterHit.get()) : delayLimit;
     }
 
-    public boolean holding() {
-        return !packets.isEmpty();
-    }
-
     public void flushAll() {
         flush();
     }

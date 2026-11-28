@@ -50,8 +50,6 @@ public final class WatermarkModule extends Module implements PlacedHudElement {
     private final HudRevealAnimation fpsAnimation = new HudRevealAnimation();
     private final HudRevealAnimation latencyAnimation = new HudRevealAnimation();
     private final HudRevealAnimation timeAnimation = new HudRevealAnimation();
-    private float fpsWidth = -1;
-    private float latencyWidth = -1;
     private String fpsText = "0 fps";
     private String latencyText = "-- ms";
     private final DigitAnimation fpsDigits = new DigitAnimation(FONT_SIZE);
@@ -101,8 +99,8 @@ public final class WatermarkModule extends Module implements PlacedHudElement {
             fpsDigits.update(renderer, fpsText, delta);
             latencyDigits.update(renderer, latencyText, delta);
             timeDigits.update(renderer, timeText, delta);
-            fpsWidth = resize(fpsWidth, fpsDigits.width(), delta);
-            latencyWidth = resize(latencyWidth, latencyDigits.width(), delta);
+            float fpsWidth = fpsDigits.width();
+            float latencyWidth = latencyDigits.width();
             float timeWidth = timeDigits.width();
             if (draggedBadge != null) {
                 var window = client.getWindow();
@@ -323,12 +321,6 @@ public final class WatermarkModule extends Module implements PlacedHudElement {
         }
     }
 
-    private float resize(float current, float target, float delta) {
-        if (current < 0) return target;
-        float next = FrameClock.approach(current, target, 45, delta);
-        return Math.abs(next - target) < 0.1f ? target : next;
-    }
-
     @Override
     protected void onEnable() {
         latencyTracker.reset();
@@ -339,8 +331,6 @@ public final class WatermarkModule extends Module implements PlacedHudElement {
         fpsAnimation.reset(fps.get());
         latencyAnimation.reset(latency.get());
         timeAnimation.reset(time.get());
-        fpsWidth = -1;
-        latencyWidth = -1;
         nextInfoUpdate = 0;
         fpsDigits.reset();
         latencyDigits.reset();

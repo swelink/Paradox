@@ -14,7 +14,7 @@ public final class MiddleClickFriendModule extends Module {
     private boolean pressed;
 
     public MiddleClickFriendModule() {
-        super("MiddleClickFriend", "Middle click to friend players", Category.PLAYER);
+        super("Friends", "Keybind to friend players", Category.PLAYER);
     }
 
     @Override

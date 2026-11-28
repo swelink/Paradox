@@ -11,7 +11,7 @@ public final class AntiResourcePackModule extends Module {
     private final ModeSetting mode = addSetting(new ModeSetting("Mode", "Spoof", "Spoof", "Decline"));
 
     public AntiResourcePackModule() {
-        super("AntiResourcePack", "Skips server resource packs", Category.PLAYER);
+        super("AntiPack", "Skips server resource packs", Category.CLIENT);
     }
 
     public boolean skip(Connection connection, ClientboundResourcePackPushPacket packet) {

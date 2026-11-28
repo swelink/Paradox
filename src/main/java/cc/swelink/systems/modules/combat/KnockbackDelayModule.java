@@ -52,7 +52,7 @@ public final class KnockbackDelayModule extends Module {
     private long releaseStart;
 
     public KnockbackDelayModule() {
-        super("KnockbackDelay", "Delays knockback", Category.COMBAT);
+        super("KBDelay", "Delays knockback", Category.COMBAT);
         range.visibleWhen(() -> mode.get().equals("Range"));
     }
 

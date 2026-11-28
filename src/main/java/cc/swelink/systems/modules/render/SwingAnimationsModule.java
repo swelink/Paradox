@@ -28,7 +28,7 @@ public final class SwingAnimationsModule extends Module {
     private final BooleanSetting onlyKillAura = addSetting(new BooleanSetting("Only KillAura", false));
 
     public SwingAnimationsModule() {
-        super("SwingAnimations", "Changes the swing animation", Category.RENDER);
+        super("Animations", "Changes the swing animation", Category.RENDER);
     }
 
     public boolean customizes(InteractionHand hand, ItemStack item) {

@@ -27,6 +27,7 @@ import cc.swelink.settings.ColorSetting;
 import cc.swelink.settings.IntSetting;
 import cc.swelink.settings.Setting;
 import cc.swelink.settings.SliderSetting;
+import cc.swelink.settings.StringSetting;
 import cc.swelink.systems.hud.HudElement;
 import cc.swelink.systems.modules.Category;
 import cc.swelink.systems.modules.Module;
@@ -151,6 +152,7 @@ public class ClickGuiScreen extends Screen {
     private Module describedModule;
     private Module shownDescription;
     private IntSetting editingSlider;
+    private StringSetting editingText;
     private float sliderClickX = Float.NaN;
     private float sliderInputLeft;
     private float sliderInputRight;
@@ -721,6 +723,7 @@ public class ClickGuiScreen extends Screen {
         if (setting == binding) return "Press input...";
         if (setting instanceof BooleanSetting || setting instanceof ColorSetting) return "";
         if (setting instanceof IntSetting slider) return slider.displayValue(settingAnimation(setting).fraction);
+        if (setting instanceof StringSetting text && text.get().isEmpty()) return "Click to type";
         return setting.displayValue();
     }
 
@@ -794,13 +797,13 @@ public class ClickGuiScreen extends Screen {
             drawChevron(renderer, right - MODE_TEXT_PAD - 3.5f, boxCenter, 3.5f, 1.9f, 1.3f, animation.dropdown, text);
             return;
         }
-        boolean editing = setting == editingSlider;
+        boolean editing = setting == editingSlider || setting == editingText;
         String value = setting instanceof BooleanSetting || setting instanceof ColorSetting ? ""
                 : fitLabel(renderer, getSettingValue(setting), SETTING_FONT, (right - left) * 0.5f);
         float valueWidth = renderer.text.measure(value, SETTING_FONT).width();
         float reserved = setting instanceof BooleanSetting ? SWITCH_WIDTH + 6
                 : setting instanceof ColorSetting ? 14
-                : editing ? renderer.text.measure(sliderInput.getValue() + editingSlider.typedSuffix(), SETTING_FONT).width() + 6
+                : editing ? renderer.text.measure(sliderInput.getValue() + typedSuffix(), SETTING_FONT).width() + 6
                 : valueWidth + 6;
         float lit = setting instanceof BooleanSetting ? Math.clamp(animation.enabled, 0, 1) : 0;
         label(renderer, fitLabel(renderer, setting.name(), SETTING_FONT, right - left - reserved), left, centerY, SETTING_FONT,
@@ -814,7 +817,8 @@ public class ClickGuiScreen extends Screen {
         } else {
             animation.valueLeft = right - valueWidth;
             label(renderer, value, animation.valueLeft, centerY, SETTING_FONT,
-                    setting instanceof BindSetting ? ClickGuiStyle.muted() : text);
+                    setting instanceof BindSetting || setting instanceof StringSetting typed && typed.get().isEmpty()
+                            ? ClickGuiStyle.muted() : text);
         }
         if (setting instanceof SliderSetting) {
             float width = right - left;
@@ -829,7 +833,7 @@ public class ClickGuiScreen extends Screen {
 
     private void drawSliderInput(Renderer2D renderer, float right, float centerY) {
         String typed = sliderInput.getValue();
-        String suffix = editingSlider.typedSuffix();
+        String suffix = typedSuffix();
         float numberRight = right - renderer.text.measure(suffix, SETTING_FONT).width();
         float left = numberRight - renderer.text.measure(typed, SETTING_FONT).width();
         sliderInputLeft = left;
@@ -1062,7 +1066,7 @@ public class ClickGuiScreen extends Screen {
         if (closing) return true;
         float x = guiMouseX(event.x());
         float y = guiMouseY(event.y());
-        if (editingSlider != null) {
+        if (editing()) {
             if (inside(x, y, sliderInputLeft - 4, sliderInputCenterY - 10, sliderInputRight - sliderInputLeft + 8, 20)) {
                 sliderClickX = x;
                 sliderEditedAt = System.nanoTime();
@@ -1169,6 +1173,8 @@ public class ClickGuiScreen extends Screen {
         } else if (setting instanceof IntSetting slider && y < rowY + SETTING_ROW_HEIGHT
                 && x >= settingAnimation(slider).valueLeft - 4) {
             startEditingSlider(slider, x);
+        } else if (setting instanceof StringSetting text) {
+            startEditingText(text, x);
         } else if (setting instanceof SliderSetting slider) {
             draggedSlider = slider;
             sliderX = panel.x;
@@ -1183,13 +1189,38 @@ public class ClickGuiScreen extends Screen {
     private void startEditingSlider(IntSetting slider, float clickX) {
         configPanel.unfocus();
         editingSlider = slider;
+        sliderInput.setMaxLength(12);
         sliderInput.setFocused(true);
         sliderInput.setValue(slider.typedValue());
         sliderClickX = clickX;
         sliderEditedAt = System.nanoTime();
     }
 
+    private void startEditingText(StringSetting text, float clickX) {
+        configPanel.unfocus();
+        editingText = text;
+        sliderInput.setMaxLength(text.maxLength());
+        sliderInput.setFocused(true);
+        sliderInput.setValue(text.get());
+        sliderClickX = clickX;
+        sliderEditedAt = System.nanoTime();
+    }
+
+    private boolean editing() {
+        return editingSlider != null || editingText != null;
+    }
+
+    private String typedSuffix() {
+        return editingSlider != null ? editingSlider.typedSuffix() : "";
+    }
+
     private void stopEditingSlider(boolean apply) {
+        if (editingText != null) {
+            if (apply) editingText.setValue(sliderInput.getValue());
+            editingText = null;
+            sliderInput.setFocused(false);
+            return;
+        }
         if (editingSlider == null) return;
         if (apply) {
             try {
@@ -1439,7 +1470,7 @@ public class ClickGuiScreen extends Screen {
     }
 
     public boolean isTyping() {
-        return binding != null || capturedBindKey != -1 || editingSlider != null
+        return binding != null || capturedBindKey != -1 || editing()
                 || configPanel != null && configPanel.focused();
     }
 
@@ -1451,7 +1482,7 @@ public class ClickGuiScreen extends Screen {
     public boolean keyPressed(KeyEvent event) {
         if (closing) return true;
         if (event.key() == capturedBindKey) return true;
-        if (editingSlider != null) {
+        if (editing()) {
             if (event.key() == InputConstants.KEY_ESCAPE) {
                 stopEditingSlider(false);
             } else if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
@@ -1491,6 +1522,10 @@ public class ClickGuiScreen extends Screen {
     public boolean charTyped(CharacterEvent event) {
         if (closing || binding != null || capturedBindKey != -1) return true;
         int typed = event.codepoint();
+        if (editingText != null) {
+            sliderEditedAt = System.nanoTime();
+            return sliderInput.charTyped(event);
+        }
         if (editingSlider != null) {
             if (!Character.isDigit(typed) && typed != '.' && typed != '-' && typed != '+') return true;
             sliderEditedAt = System.nanoTime();

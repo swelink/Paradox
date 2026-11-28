@@ -84,6 +84,7 @@ import cc.swelink.systems.modules.render.PostProcessingModule;
 import cc.swelink.systems.modules.render.BrutalModule;
 import cc.swelink.systems.modules.render.TargetEspModule;
 import cc.swelink.systems.modules.render.WatermarkModule;
+import cc.swelink.systems.modules.render.TextHudModule;
 import cc.swelink.systems.modules.render.DynamicIslandModule;
 import cc.swelink.systems.modules.render.esp.EspModule;
 import cc.swelink.systems.modules.world.AutoDrainModule;
@@ -202,6 +203,7 @@ public class ModuleManager {
         register(new TrajectoryModule());
         register(watermark);
         register(new WatermarkModule());
+        register(new TextHudModule());
         register(targetHud);
         register(new TargetEspModule());
         register(new BrutalModule());

@@ -6,6 +6,7 @@ import cc.swelink.settings.BooleanSetting;
 import cc.swelink.settings.ColorSetting;
 import cc.swelink.settings.IntSetting;
 import cc.swelink.settings.ModeSetting;
+import cc.swelink.settings.StringSetting;
 import cc.swelink.settings.Setting;
 import cc.swelink.systems.hud.PlacedHudElement;
 import cc.swelink.systems.modules.movement.ElytraBoostModule;
@@ -194,7 +195,8 @@ public final class ConfigManager {
         for (var setting : module.settings()) {
             String type = setting instanceof BindModeSetting ? "bind-mode" : setting instanceof BindSetting ? "bind"
                     : setting instanceof ColorSetting ? "color" : setting instanceof IntSetting ? "number"
-                    : setting instanceof BooleanSetting ? "boolean" : setting instanceof ModeSetting ? "mode" : null;
+                    : setting instanceof BooleanSetting ? "boolean" : setting instanceof ModeSetting ? "mode"
+                    : setting instanceof StringSetting ? "text" : null;
             if (type == null) continue;
             String key = type + ":" + setting.name();
             int occurrence = counts.merge(key, 1, Integer::sum);
@@ -211,6 +213,10 @@ public final class ConfigManager {
         if (setting instanceof BindModeSetting bindMode) {
             var mode = BindModeSetting.Mode.valueOf(value.getAsString());
             return () -> bindMode.select(mode);
+        }
+        if (setting instanceof StringSetting text) {
+            String typed = value.getAsString();
+            return () -> text.setValue(typed);
         }
         if (setting instanceof ModeSetting mode) {
             String choice = value.getAsString();

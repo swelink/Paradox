@@ -25,13 +25,11 @@ final class ClickGuiDraw {
 
     static String fitLabel(TextRenderer renderer, String text, float size, float width) {
         if (renderer.measure(text, size).width() <= width) return text;
-        String suffix = "…";
-        if (renderer.measure(suffix, size).width() > width) return "";
         int end = text.length();
-        while (end > 0 && renderer.measure(text.substring(0, end) + suffix, size).width() > width) {
+        while (end > 0 && renderer.measure(text.substring(0, end), size).width() > width) {
             end = text.offsetByCodePoints(end, -1);
         }
-        return text.substring(0, end) + suffix;
+        return text.substring(0, end);
     }
 
     static void label(Renderer2D renderer, String text, float x, float centerY, int color) {

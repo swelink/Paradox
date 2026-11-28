@@ -246,7 +246,7 @@ public final class AutoTotemModule extends Module {
     }
 
     private boolean mouseMovement() {
-        return !totemGuard() && mouseMovement.get();
+        return !totemGuard() && !silent() && mouseMovement.get();
     }
 
     private long closeDelayNanos() {
@@ -330,7 +330,7 @@ public final class AutoTotemModule extends Module {
             double dy = (access.paradox$topPos() + slot.y + 8) * scaleY - mouseY;
             return dx * dx + dy * dy;
         }));
-        int pool = totemGuard() ? totems.size() : Math.min(candidates.get(), totems.size());
+        int pool = totemGuard() || silent() ? totems.size() : Math.min(candidates.get(), totems.size());
         return totems.get(ThreadLocalRandom.current().nextInt(pool));
     }
 

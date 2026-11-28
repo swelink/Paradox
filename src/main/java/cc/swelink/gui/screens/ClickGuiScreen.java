@@ -9,7 +9,9 @@ import static cc.swelink.gui.screens.ClickGuiDraw.mix;
 
 import cc.swelink.renderer.AccentWave;
 import cc.swelink.renderer.FrameClock;
+import cc.swelink.renderer.Glass;
 import cc.swelink.renderer.GuiViewport;
+import cc.swelink.renderer.HudPopAnimation;
 import cc.swelink.renderer.Renderer2D;
 import cc.swelink.renderer.SpringAnimation;
 import cc.swelink.renderer.TextRenderer;
@@ -31,6 +33,7 @@ import cc.swelink.systems.modules.Module;
 import cc.swelink.systems.modules.ModuleManager;
 import cc.swelink.systems.modules.combat.AutoAnchorModule;
 import cc.swelink.systems.modules.render.DynamicIslandModule;
+import cc.swelink.systems.modules.render.PostProcessingModule;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
@@ -56,21 +59,26 @@ public class ClickGuiScreen extends Screen {
             Category.MOVEMENT, Category.CLIENT, Category.CONFIG};
 
     private static final float PANEL_WIDTH = 185;
-    private static final float PANEL_RADIUS = UiTokens.RADIUS_WINDOW;
-    private static final float HEADER_HEIGHT = 32;
+    private static final float PANEL_RADIUS = 18;
+    private static final float HEADER_HEIGHT = 40;
     private static final float PANEL_GAP = 14;
     private static final float ROW_HEIGHT = 28;
     private static final float KEY_FONT = UiTokens.TEXT_MICRO;
-    private static final float KEY_PAD = 5;
     private static final float KEY_HEIGHT = 14;
+    private static final float KEY_PAD = (KEY_HEIGHT - KEY_FONT * 0.727f) / 2;
     private static final int VISIBLE_MODULES = 18;
     private static final float TITLE_FONT = UiTokens.TEXT_TITLE;
     private static final float CATEGORY_ICON = 16;
     private static final float CATEGORY_ICON_GAP = 6;
+    private static final float HEADER_PAD = (HEADER_HEIGHT - CATEGORY_ICON) / 2;
     private static final float SCREEN_MARGIN = 8;
     private static final float BASE_SCALE = 0.8f;
     private static final float RESIZE_STEP = 0.1f;
-    private static final float POP_SPEED = 38;
+    private static final int BACKGROUND_BLUR_DOWNSAMPLE = 4;
+    private static final int BACKGROUND_BLUR_PASSES = 4;
+    private static final float CORNER_SLICE = 1;
+    private static final float POP_SPEED = 20;
+    private static final float WINDOW_FAR = 0.08f;
     private static final float CLOSED = 0.03f;
 
     private static final float EDGE = (ROW_HEIGHT - ClickGuiStyle.MODULE_FONT_SIZE * 0.73f) / 2;
@@ -78,7 +86,6 @@ public class ClickGuiScreen extends Screen {
     private static final float ARROW_HALF = 3.5f;
     private static final float ARROW_RISE = 1.9f;
     private static final float ARROW_THICKNESS = 1.4f;
-    private static final float ARROW_EXTRA_EDGE = 5;
 
     private static final float MODULE_FONT_SIZE = ClickGuiStyle.MODULE_FONT_SIZE;
     private static final float SETTING_FONT = ClickGuiStyle.SETTING_FONT_SIZE;
@@ -86,10 +93,10 @@ public class ClickGuiScreen extends Screen {
     private static final float SETTING_ROW_HEIGHT = ClickGuiStyle.SETTING_ROW_HEIGHT;
     private static final float SETTINGS_SPACING = ClickGuiStyle.SETTINGS_SPACING;
 
-    private static final float SWITCH_WIDTH = 18;
-    private static final float SWITCH_HEIGHT = 10;
+    private static final float SWITCH_WIDTH = 26;
+    private static final float SWITCH_HEIGHT = 15;
     private static final float MODE_BOX_INSET = EDGE;
-    private static final float MODE_TEXT_PAD = 5;
+    private static final float MODE_TEXT_PAD = (SETTING_ROW_HEIGHT - SETTING_FONT * 0.727f) / 2;
     private static final float MODE_BOX_RADIUS = UiTokens.RADIUS_CONTROL;
     private static final float MODE_ARROW_SPACE = 12;
     private static final float MODE_LABEL = 18;
@@ -250,7 +257,7 @@ public class ClickGuiScreen extends Screen {
     }
 
     private float windowZoom() {
-        return 0.9f + 0.1f * windowPop.value();
+        return HudPopAnimation.scale(Math.clamp(windowPop.value(), 0, 1), WINDOW_FAR);
     }
 
     private float windowOpacity() {
@@ -263,6 +270,7 @@ public class ClickGuiScreen extends Screen {
         float oldWidth = screenWidth();
         float oldHeight = screenHeight();
         resizeScale = FrameClock.approach(resizeScale, targetResizeScale, 18, deltaTime);
+        if (Math.abs(resizeScale - targetResizeScale) < 0.0005f) resizeScale = targetResizeScale;
         float shiftX = (screenWidth() - oldWidth) / 2;
         float shiftY = (screenHeight() - oldHeight) / 2;
         if (shiftX != 0 || shiftY != 0) {
@@ -275,7 +283,7 @@ public class ClickGuiScreen extends Screen {
             }
         }
         updateAnimations();
-        windowPop.update(closing ? 0 : 1, POP_SPEED, 1, deltaTime);
+        windowPop.update(closing ? 0 : 1, POP_SPEED, 0.85f, deltaTime);
         panelFade = Math.min(1, panelFade + deltaTime / 0.07f);
 
         float x = guiMouseX(mouseX);
@@ -287,6 +295,13 @@ public class ClickGuiScreen extends Screen {
         }
 
         Panel hoveredPanel = panelAt(x, y);
+        if (!overlay && PostProcessingModule.active()) {
+            graphics.nextStratum();
+            try (var renderer = new Renderer2D(graphics)) {
+                renderer.blur.backdrop(renderer, 0, 0, graphics.guiWidth(), graphics.guiHeight(), BACKGROUND_BLUR_DOWNSAMPLE,
+                        BACKGROUND_BLUR_PASSES, ARGB.color(Math.round(255 * windowOpacity()), 0xFFFFFF));
+            }
+        }
         graphics.nextStratum();
         UniformGuiFade.begin(graphics, windowOpacity());
 
@@ -326,11 +341,11 @@ public class ClickGuiScreen extends Screen {
     }
 
     private int bodyColor() {
-        return ClickGuiStyle.PANEL_BODY;
+        return PostProcessingModule.active() ? ClickGuiStyle.PANEL_BODY : ARGB.opaque(ClickGuiStyle.PANEL_BODY);
     }
 
     private int settingsColor() {
-        return ClickGuiStyle.PANEL_INSET;
+        return PostProcessingModule.active() ? ClickGuiStyle.PANEL_INSET : ARGB.opaque(ClickGuiStyle.PANEL_INSET);
     }
 
     private int textColor() {
@@ -363,8 +378,12 @@ public class ClickGuiScreen extends Screen {
         if (reveal <= 0.002f || shownDescription == null) return;
         String text = shownDescription.description();
         var size = renderer.text.measureWrapped(text, DESCRIPTION_FONT, DESCRIPTION_WIDTH - DESCRIPTION_PAD * 2);
+        float lineHeight = renderer.text.lineHeight(DESCRIPTION_FONT);
+        float cap = renderer.text.capHeight(DESCRIPTION_FONT);
+        int lines = Math.max(1, Math.round(size.height() / lineHeight));
         float width = size.width() + DESCRIPTION_PAD * 2;
-        float height = size.height() + DESCRIPTION_PAD * 2;
+        float height = (lines - 1) * lineHeight + cap + DESCRIPTION_PAD * 2;
+        float textOffset = DESCRIPTION_PAD + cap - renderer.text.ascent(DESCRIPTION_FONT);
         float x = Math.min(mouseX + 10, screenWidth() - width - 4);
         float y = mouseY + 12;
         if (y + height > screenHeight() - 4) y = mouseY - height - 6;
@@ -372,7 +391,7 @@ public class ClickGuiScreen extends Screen {
         renderer.opacity(baseOpacity * reveal);
         try {
             renderer.sdf.roundedRect(x, y + 4 * (1 - reveal), width, height, ClickGuiStyle.CARD_RADIUS - 2, ClickGuiStyle.raised());
-            renderer.text.drawWrapped(text, x + DESCRIPTION_PAD, y + 4 * (1 - reveal) + DESCRIPTION_PAD, DESCRIPTION_FONT,
+            renderer.text.drawWrapped(text, x + DESCRIPTION_PAD, y + 4 * (1 - reveal) + textOffset, DESCRIPTION_FONT,
                     DESCRIPTION_WIDTH - DESCRIPTION_PAD * 2, textColor());
         } finally {
             renderer.opacity(baseOpacity);
@@ -386,17 +405,24 @@ public class ClickGuiScreen extends Screen {
         float height = HEADER_HEIGHT + body;
         renderer.opacity(opacity);
         try {
-            renderer.sdf.roundedRect(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, bodyColor());
-            renderer.sdf.clippedRoundedRect(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, ClickGuiStyle.PANEL_HEADER,
-                    panel.x, top, panel.x + PANEL_WIDTH, panel.y);
+            if (PostProcessingModule.active()) {
+                renderer.blur.frostedGlass(renderer, Glass.HUD, panel.x + 0.5f, top + 0.5f, PANEL_WIDTH - 1, height - 1,
+                        PANEL_RADIUS - 0.5f, ClickGuiStyle.GLASS_BACKING);
+            }
+            if (panel.category == Category.CONFIG || rows.isEmpty()) {
+                renderer.sdf.roundedRect(panel.x, top, PANEL_WIDTH, height, PANEL_RADIUS, bodyColor());
+            } else {
+                drawBackground(renderer, panel, rows, body);
+            }
             float centerY = top + HEADER_HEIGHT / 2;
-            float iconX = panel.x + EDGE;
-            renderer.textures.icon(panel.category.icon(), iconX, centerY - CATEGORY_ICON / 2, CATEGORY_ICON, ClickGuiStyle.MODULE_TEXT);
             var title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
-            title.draw(panel.category.title(), iconX + CATEGORY_ICON + CATEGORY_ICON_GAP,
-                    centerY - title.lineHeight(TITLE_FONT) / 2, TITLE_FONT, ClickGuiStyle.TITLE);
-            drawChevron(renderer, arrowCenter(panel.x), centerY, ARROW_HALF, ARROW_RISE, ARROW_THICKNESS,
-                    panel.amount, ClickGuiStyle.ARROW);
+            String name = panel.category.title();
+            float iconX = panel.x + HEADER_PAD;
+            renderer.textures.icon(panel.category.icon(), iconX, centerY - CATEGORY_ICON / 2, CATEGORY_ICON, ClickGuiStyle.TITLE);
+            title.draw(name, iconX + CATEGORY_ICON + CATEGORY_ICON_GAP,
+                    title.topInBox(centerY, 0, TITLE_FONT), TITLE_FONT, ClickGuiStyle.TITLE);
+            drawChevron(renderer, panel.x + PANEL_WIDTH - HEADER_PAD - ARROW_HALF, centerY, ARROW_HALF, ARROW_RISE,
+                    ARROW_THICKNESS, panel.amount, ClickGuiStyle.TITLE);
             if (body > 0.5f) {
                 try (var clip = clip(renderer, panel.x - 1, panel.y - 1, PANEL_WIDTH + 2, body + 2)) {
                     if (panel.category == Category.CONFIG) {
@@ -418,10 +444,10 @@ public class ClickGuiScreen extends Screen {
                     MODULE_FONT_SIZE, ClickGuiStyle.muted());
             return;
         }
-        drawRowStrips(renderer, panel, rows, body);
         float top = panel.y;
         float bottom = panel.y + body;
-        try (var clip = clip(renderer, panel.x, top, PANEL_WIDTH, body)) {
+        try (var clip = clip(renderer, panel.x, top, PANEL_WIDTH, body);
+             var shape = renderer.clips.pushRounded(panel.x, top - HEADER_HEIGHT, PANEL_WIDTH, HEADER_HEIGHT + body, PANEL_RADIUS)) {
             for (Block block : blocks(rows)) {
                 float y = panel.y - panel.scroll + block.y();
                 if (y + block.height() <= top || y >= bottom) continue;
@@ -475,43 +501,110 @@ public class ClickGuiScreen extends Screen {
         return placed;
     }
 
-    private void drawRowStrips(Renderer2D renderer, Panel panel, List<Row> rows, float body) {
+    private void drawBackground(Renderer2D renderer, Panel panel, List<Row> rows, float body) {
         float shapeTop = panel.y - HEADER_HEIGHT;
         float shapeHeight = HEADER_HEIGHT + body;
-        float left = panel.x;
-        float right = panel.x + PANEL_WIDTH;
+        float shapeBottom = shapeTop + shapeHeight;
         float viewTop = panel.y;
         float viewBottom = panel.y + body;
-        for (Block block : blocks(rows)) {
+        float cursor = shapeTop;
+        List<Block> blocks = blocks(rows);
+        for (int index = 0; index < blocks.size(); index++) {
+            Block block = blocks.get(index);
             float y = panel.y - panel.scroll + block.y();
             float headerBottom = y + rows.get(block.start()).height();
-            float bottom = y + block.height();
-            if (bottom <= viewTop || y >= viewBottom) continue;
+            float blockBottom = y + block.height();
+            if (index == blocks.size() - 1) {
+                boolean headerOnly = headerBottom >= blockBottom;
+                blockBottom = Math.max(blockBottom, viewBottom);
+                if (headerOnly) headerBottom = blockBottom;
+            }
+            float headerTop = Math.max(y, viewTop);
+            float headerClip = Math.min(headerBottom, viewBottom);
+            if (headerClip > headerTop) {
+                fillStrip(renderer, panel, shapeTop, shapeHeight, cursor, headerTop, bodyColor());
+                float enabled = Math.clamp(moduleAnimation(rows.get(block.start()).module()).enabled, 0, 1);
+                drawModuleFill(renderer, panel, shapeTop, shapeHeight, headerTop, headerClip, enabled);
+                cursor = headerClip;
+            }
             float settingsTop = Math.max(headerBottom, viewTop);
-            float settingsBottom = Math.min(bottom, viewBottom);
+            float settingsBottom = Math.min(blockBottom, viewBottom);
             if (settingsBottom > settingsTop) {
-                renderer.sdf.clippedRoundedRect(left, shapeTop, PANEL_WIDTH, shapeHeight, PANEL_RADIUS,
-                        settingsColor(), left, settingsTop, right, settingsBottom);
+                fillStrip(renderer, panel, shapeTop, shapeHeight, cursor, settingsTop, bodyColor());
+                fillStrip(renderer, panel, shapeTop, shapeHeight, settingsTop, settingsBottom, settingsColor());
+                cursor = settingsBottom;
             }
         }
+        fillStrip(renderer, panel, shapeTop, shapeHeight, cursor, shapeBottom, bodyColor());
+    }
+
+    private void fillStrip(Renderer2D renderer, Panel panel, float shapeTop, float shapeHeight, float top, float bottom,
+                           int color) {
+        if (bottom <= top) return;
+        renderer.sdf.clippedRoundedRect(panel.x, shapeTop, PANEL_WIDTH, shapeHeight, PANEL_RADIUS, color,
+                panel.x, top, panel.x + PANEL_WIDTH, bottom);
+    }
+
+    private void drawModuleFill(Renderer2D renderer, Panel panel, float shapeTop, float shapeHeight, float top,
+                                float bottom, float enabled) {
+        int body = bodyColor();
+        if (enabled <= 0.001f) {
+            fillStrip(renderer, panel, shapeTop, shapeHeight, top, bottom, body);
+            return;
+        }
+        int alpha = Math.round(ARGB.alpha(body) + (255 - ARGB.alpha(body)) * enabled);
+        int start = ARGB.color(alpha, lerpColor(enabled, body, ThemeColors.primary()));
+        int end = start;
+        float left = panel.x;
+        float right = panel.x + PANEL_WIDTH;
+        float cornerTop = shapeTop + shapeHeight - PANEL_RADIUS;
+        float flatBottom = Math.min(bottom, cornerTop);
+        if (flatBottom > top) renderer.gradient(left, top, PANEL_WIDTH, flatBottom - top, start, start, end, end, false);
+        float curveTop = Math.max(top, cornerTop);
+        if (bottom <= curveTop) return;
+        float innerLeft = left + PANEL_RADIUS;
+        float innerRight = right - PANEL_RADIUS;
+        renderer.gradient(innerLeft, curveTop, innerRight - innerLeft, bottom - curveTop,
+                lerpColor(PANEL_RADIUS / PANEL_WIDTH, start, end), lerpColor(PANEL_RADIUS / PANEL_WIDTH, start, end),
+                lerpColor(1 - PANEL_RADIUS / PANEL_WIDTH, start, end), lerpColor(1 - PANEL_RADIUS / PANEL_WIDTH, start, end),
+                false);
+        for (float sliceX = left; sliceX < right; sliceX += CORNER_SLICE) {
+            if (sliceX >= innerLeft && sliceX < innerRight) sliceX = innerRight;
+            float sliceRight = Math.min(sliceX + CORNER_SLICE, sliceX < innerLeft ? innerLeft : right);
+            int color = lerpColor(((sliceX + sliceRight) / 2 - left) / PANEL_WIDTH, start, end);
+            renderer.sdf.clippedRoundedRect(left, shapeTop, PANEL_WIDTH, shapeHeight, PANEL_RADIUS,
+                    color, sliceX, curveTop, sliceRight, bottom);
+        }
+    }
+
+    private static int lerpColor(float amount, int from, int to) {
+        float t = Math.clamp(amount, 0, 1);
+        int a = Math.round(ARGB.alpha(from) + (ARGB.alpha(to) - ARGB.alpha(from)) * t);
+        int r = Math.round(ARGB.red(from) + (ARGB.red(to) - ARGB.red(from)) * t);
+        int g = Math.round(ARGB.green(from) + (ARGB.green(to) - ARGB.green(from)) * t);
+        int b = Math.round(ARGB.blue(from) + (ARGB.blue(to) - ARGB.blue(from)) * t);
+        return ARGB.color(a, r, g, b);
     }
 
     private void drawModeBoxes(Renderer2D renderer, List<Row> rows, Block block, float x, float y) {
         float groupY = y;
         for (int i = block.start(); i < block.end(); i++) {
             Row row = rows.get(i);
-            if (row.setting() instanceof ChoiceSetting && !chips(row.setting()) && !row.spacer() && row.groupOffset() == 0) {
+            if (row.setting() instanceof ChoiceSetting mode && !chips(row.setting()) && !row.spacer() && row.groupOffset() == 0) {
                 float boxX = x + MODE_BOX_INSET;
                 float boxWidth = PANEL_WIDTH - MODE_BOX_INSET * 2;
-                float boxTop = groupY + MODE_LABEL * row.amount();
-                float boxHeight = row.groupHeight() - MODE_LABEL * row.amount();
-                renderer.sdf.roundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
-                        ClickGuiStyle.CONTROL);
-                float optionsTop = groupY + row.height();
-                if (row.groupHeight() > row.height() + 0.5f) {
+                float boxTop = groupY + MODE_LABEL;
+                float boxHeight = SETTING_ROW_HEIGHT
+                        + mode.choices().size() * SETTING_ROW_HEIGHT * settingAnimation(row.setting()).dropdown;
+                float visibleBottom = groupY + row.groupHeight();
+                if (visibleBottom > boxTop) {
                     renderer.sdf.clippedRoundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
-                            ClickGuiStyle.CONTROL_DARK, boxX, optionsTop, boxX + boxWidth,
-                            groupY + row.groupHeight());
+                            ClickGuiStyle.CONTROL, boxX, boxTop, boxX + boxWidth, visibleBottom);
+                }
+                float optionsTop = boxTop + SETTING_ROW_HEIGHT;
+                if (visibleBottom > optionsTop + 0.5f) {
+                    renderer.sdf.clippedRoundedRect(boxX, boxTop, boxWidth, boxHeight, MODE_BOX_RADIUS,
+                            ClickGuiStyle.CONTROL_DARK, boxX, optionsTop, boxX + boxWidth, visibleBottom);
                 }
             }
             groupY += row.height();
@@ -521,15 +614,6 @@ public class ClickGuiScreen extends Screen {
     private void drawRow(Renderer2D renderer, Row row, float x, float y, boolean hovered, float viewportTop, float viewportBottom) {
         float active = row.setting() != null ? Math.clamp(settingAnimation(row.setting()).visibility, 0, 1) : 1;
         drawRowContent(renderer, row, x, y, hovered && active > 0.95f, viewportTop, viewportBottom);
-        if (active >= 0.999f) return;
-        float top = Math.max(y, viewportTop);
-        float bottom = Math.min(y + row.height(), viewportBottom);
-        if (bottom <= top) return;
-        float left = x + MODE_BOX_INSET - 2;
-        float width = PANEL_WIDTH - (MODE_BOX_INSET - 2) * 2;
-        int veil = settingsColor();
-        renderer.sdf.clippedRoundedRect(left, y, width, row.height(), 0,
-                ARGB.color(Math.round(255 * (1 - active)), veil), left, top, left + width, bottom);
     }
 
     private void drawRowContent(Renderer2D renderer, Row row, float x, float y, boolean hovered,
@@ -589,7 +673,7 @@ public class ClickGuiScreen extends Screen {
     }
 
     private float arrowCenter(float rowX) {
-        return rowX + PANEL_WIDTH - EDGE - ARROW_EXTRA_EDGE - ARROW_HALF;
+        return rowX + PANEL_WIDTH - EDGE - ARROW_HALF;
     }
 
     private void drawModuleHeader(Renderer2D renderer, Row row, ModuleAnimation animation, float x, float y) {
@@ -597,9 +681,9 @@ public class ClickGuiScreen extends Screen {
         float enabled = Math.clamp(animation.enabled, 0, 1);
         float hover = Math.clamp(animation.hover, 0, 1);
         float nameX = x + EDGE;
-        int color = mix(mix(textColor(), ClickGuiStyle.MODULE_HOVER, hover), accentColor(), enabled);
+        int color = mix(mix(textColor(), ClickGuiStyle.MODULE_HOVER, hover), ClickGuiStyle.TITLE, enabled);
         drawChevron(renderer, arrowCenter(x), centerY, ARROW_HALF, ARROW_RISE, ARROW_THICKNESS, animation.open,
-                mix(ClickGuiStyle.ARROW, accentColor(), enabled));
+                color);
         float right = arrowCenter(x) - ARROW_HALF - KEY_GAP;
         if (row.module().bind().get() != -1) {
             String key = fitLabel(renderer, row.module().bind().displayValue(), KEY_FONT, 40);
@@ -611,7 +695,7 @@ public class ClickGuiScreen extends Screen {
             right = keyLeft - KEY_GAP;
         }
         String name = fitLabel(renderer.text, row.module().name(), MODULE_FONT_SIZE, right - nameX - 4);
-        renderer.text.draw(name, nameX, centerY - renderer.text.lineHeight(MODULE_FONT_SIZE) / 2, MODULE_FONT_SIZE, color);
+        renderer.text.draw(name, nameX, renderer.text.topInBox(centerY, 0, MODULE_FONT_SIZE), MODULE_FONT_SIZE, color);
     }
 
     private String getSettingValue(Setting<?> setting) {
@@ -628,8 +712,7 @@ public class ClickGuiScreen extends Screen {
         renderer.sdf.roundedRect(left, centerY - SWITCH_HEIGHT / 2, SWITCH_WIDTH, SWITCH_HEIGHT, SWITCH_HEIGHT / 2, track);
         float travel = SWITCH_WIDTH - SWITCH_HEIGHT;
         float knobX = left + SWITCH_HEIGHT / 2 + travel * Math.clamp(amount, -0.1f, 1.1f);
-        renderer.sdf.circle(knobX, centerY, SWITCH_HEIGHT / 2 - 1.5f,
-                mix(ClickGuiStyle.LABEL, ClickGuiStyle.TITLE, on));
+        renderer.sdf.circle(knobX, centerY, SWITCH_HEIGHT / 2 - 1.5f, 0xFFFFFFFF);
     }
 
     private boolean chips(Setting<?> setting) {
@@ -669,7 +752,7 @@ public class ClickGuiScreen extends Screen {
             float active = Math.clamp(1 - Math.abs(position - i), 0, 1);
             float textWidth = renderer.text.measure(option, CHIP_FONT).width();
             label(renderer, option, chipLeft(choice, x, i) + (width - textWidth) / 2, centerY, CHIP_FONT,
-                    mix(ClickGuiStyle.LABEL, textColor(), active));
+                    mix(ClickGuiStyle.LABEL, 0xFFFFFFFF, active));
         }
     }
 
@@ -712,7 +795,7 @@ public class ClickGuiScreen extends Screen {
         } else {
             animation.valueLeft = right - valueWidth;
             label(renderer, value, animation.valueLeft, centerY, SETTING_FONT,
-                    setting instanceof BindSetting ? ClickGuiStyle.muted() : accentColor());
+                    setting instanceof BindSetting ? ClickGuiStyle.muted() : text);
         }
         if (setting instanceof SliderSetting) {
             float width = right - left;
@@ -721,7 +804,7 @@ public class ClickGuiScreen extends Screen {
             float half = SLIDER_TRACK / 2;
             renderer.sdf.roundedRect(left, trackY - half, width, SLIDER_TRACK, half, ClickGuiStyle.TRACK);
             if (fill > 0) renderer.sdf.roundedRect(left, trackY - half, fill, SLIDER_TRACK, half, primary);
-            renderer.sdf.circle(Math.clamp(left + fill, left + SLIDER_KNOB, right - SLIDER_KNOB), trackY, SLIDER_KNOB, text);
+            renderer.sdf.circle(Math.clamp(left + fill, left + SLIDER_KNOB, right - SLIDER_KNOB), trackY, SLIDER_KNOB, primary);
         }
     }
 
@@ -833,12 +916,58 @@ public class ClickGuiScreen extends Screen {
         return rows;
     }
 
+    private Map<Setting<?>, Float> revealedVisibility(Module module) {
+        Map<Setting<?>, Float> result = new IdentityHashMap<>();
+        List<Setting<?>> run = new ArrayList<>();
+        for (Setting<?> setting : module.settings()) {
+            float visibility = settingAnimation(setting).visibility;
+            if (visibility > 0 && visibility < 0.999f) {
+                run.add(setting);
+                continue;
+            }
+            revealRun(run, result);
+            if (visibility > 0) result.put(setting, visibility);
+        }
+        revealRun(run, result);
+        return result;
+    }
+
+    private void revealRun(List<Setting<?>> run, Map<Setting<?>, Float> result) {
+        if (run.isEmpty()) return;
+        float visibility = 0;
+        float total = 0;
+        for (Setting<?> setting : run) {
+            visibility = Math.max(visibility, settingAnimation(setting).visibility);
+            total += fullSettingHeight(setting);
+        }
+        float remaining = total * visibility;
+        for (Setting<?> setting : run) {
+            float height = fullSettingHeight(setting);
+            float reveal = Math.clamp(remaining / height, 0, 1);
+            if (reveal > 0) result.put(setting, reveal);
+            remaining -= height;
+        }
+        run.clear();
+    }
+
+    private float fullSettingHeight(Setting<?> setting) {
+        if (setting instanceof ColorSetting color) {
+            return SETTING_ROW_HEIGHT + ClickGuiStyle.PICKER_HEIGHT * settingAnimation(color).dropdown;
+        }
+        if (setting instanceof ChoiceSetting mode && !chips(setting)) {
+            return MODE_LABEL + SETTING_ROW_HEIGHT + mode.choices().size() * SETTING_ROW_HEIGHT * settingAnimation(setting).dropdown;
+        }
+        return Row.settingHeight(setting);
+    }
+
     private List<Row> settingsRows(Module module) {
         List<Row> rows = new ArrayList<>();
         List<Row> group = new ArrayList<>();
+        Map<Setting<?>, Float> revealed = revealedVisibility(module);
         for (Setting<?> setting : module.settings()) {
-            float visibility = settingAnimation(setting).visibility;
-            if (visibility == 0) continue;
+            Float shown = revealed.get(setting);
+            if (shown == null) continue;
+            float visibility = shown;
             if (setting instanceof ColorSetting color) {
                 appendSettingsGroup(rows, group, module);
                 group.clear();
@@ -874,7 +1003,11 @@ public class ClickGuiScreen extends Screen {
         if (!rows.isEmpty()) {
             float visibility = 0;
             for (Row row : group) visibility = Math.max(visibility, row.amount());
-            rows.add(Row.spacing(module, visibility));
+            float previous = 0;
+            for (int i = rows.size() - 1; i >= 0 && !rows.get(i).spacer(); i--) {
+                previous = Math.max(previous, rows.get(i).amount());
+            }
+            rows.add(Row.spacing(module, Math.min(visibility, previous)));
         }
         float height = 0;
         for (Row row : group) height += row.height();
@@ -1167,15 +1300,17 @@ public class ClickGuiScreen extends Screen {
                 updateSettingAnimation(setting);
             }
         }
+        boolean resizing = resizeScale != targetResizeScale;
         for (Panel panel : panels) {
-            panel.x = snapToPixel(panel.targetX);
-            panel.y = snapToPixel(panel.targetY);
+            boolean moving = resizing || panel == draggedPanel;
+            panel.x = moving ? panel.targetX : snapToPixel(panel.targetX);
+            panel.y = moving ? panel.targetY : snapToPixel(panel.targetY);
             panel.amount = animateLayout(panel.amountMotion, panel.open ? 1 : 0, 20);
             float maximum = maxScroll(panel, rows(panel));
             panel.targetScroll = Math.clamp(panel.targetScroll, 0, maximum);
             float scroll = Math.clamp(animate(panel.scrollMotion, panel.targetScroll, 20), 0, maximum);
             if (scroll != panel.scrollMotion.value()) panel.scrollMotion.reset(scroll);
-            panel.scroll = snapToPixel(scroll);
+            panel.scroll = resizing || scroll != panel.targetScroll ? scroll : snapToPixel(scroll);
         }
     }
 

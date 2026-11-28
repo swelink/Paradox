@@ -3,6 +3,7 @@ package cc.swelink.renderer;
 import org.joml.Matrix3x2f;
 
 public final class HudPopAnimation {
+    private static final float FAR = 0.25f;
     private final SpringAnimation motion = new SpringAnimation();
     private final FrameClock clock = new FrameClock();
     private final boolean smooth;
@@ -53,7 +54,11 @@ public final class HudPopAnimation {
     }
 
     public static float scale(float value) {
-        return 0.8f + value * 0.2f + 0.04f * (float) Math.sin(Math.PI * value);
+        return scale(value, FAR);
+    }
+
+    public static float scale(float value, float far) {
+        return far + value * (1 - far) + 0.06f * (float) Math.sin(Math.PI * value);
     }
 
     public static void pop(Matrix3x2f pose, float value, float x, float y, float width, float height, int edges) {
@@ -77,7 +82,7 @@ public final class HudPopAnimation {
             float centerY = pivotY(y, height, edges);
             var pose = renderer.graphics().pose();
             pose.translate(centerX, centerY);
-            pose.scale(0.8f + value * 0.2f);
+            pose.scale(FAR + value * (1 - FAR));
             pose.translate(-centerX, -centerY);
             return;
         }

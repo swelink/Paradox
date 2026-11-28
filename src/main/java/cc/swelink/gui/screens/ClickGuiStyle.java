@@ -12,18 +12,17 @@ public final class ClickGuiStyle {
     static final float SETTING_ROW_HEIGHT = 24;
     static final float SLIDER_HEIGHT = 36;
     static final float PICKER_HEIGHT = 104;
-    static final int PANEL_HEADER = 0xFF151415;
-    static final int PANEL_BODY = 0xFF1F1F1F;
-    static final int PANEL_INSET = 0xFF171717;
-    static final int CONTROL = 0xFF2A2A2A;
-    static final int CONTROL_DARK = 0xFF232323;
+    static final int PANEL_BODY = 0xE01F1F1F;
+    static final int PANEL_INSET = 0xE01A1A1A;
+    static final int GLASS_BACKING = 0xFF101010;
+    static final int CONTROL = 0xFF161616;
+    static final int CONTROL_DARK = 0xFF121212;
     static final int TRACK = 0xFF3A3A3A;
     static final int TITLE = 0xFFF8F8F6;
     static final int MODULE_TEXT = 0xFFB4B4B4;
     static final int MODULE_HOVER = 0xFFE2E2E2;
     static final int LABEL = UiTokens.TEXT_TERTIARY;
     static final int KEY_TEXT = UiTokens.TEXT_TERTIARY;
-    static final int ARROW = 0xFF555555;
 
     static int header() {
         return ThemeColors.theme().header;

@@ -1,12 +1,10 @@
 package cc.swelink.renderer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.renderpearl.api.textures.FilterMode;
 
 import net.minecraft.client.gui.render.TextureSetup;
 
-import org.joml.Matrix3x2fc;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -119,17 +117,12 @@ public final class TextRenderer {
         }
         var setup = TextureSetup.singleTexture(layout.font.textureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
         Bounds bounds = layout.bounds;
+        var shapes = renderer.clips.shapes();
         renderer.submit(Pipelines.TEXT, setup, x + bounds.left, y + bounds.top,
                 bounds.right - bounds.left, bounds.bottom - bounds.top, (vertices, pose) -> {
             for (Quad glyph : layout.glyphs) {
-                float left = x + glyph.left;
-                float right = x + glyph.right;
-                float top = y + glyph.top;
-                float bottom = y + glyph.bottom;
-                vertices.addVertexWith2DPose(pose, left, top).setUv(glyph.u0, glyph.v0).setColor(colors.color(left, top));
-                vertices.addVertexWith2DPose(pose, left, bottom).setUv(glyph.u0, glyph.v1).setColor(colors.color(left, bottom));
-                vertices.addVertexWith2DPose(pose, right, bottom).setUv(glyph.u1, glyph.v1).setColor(colors.color(right, bottom));
-                vertices.addVertexWith2DPose(pose, right, top).setUv(glyph.u1, glyph.v0).setColor(colors.color(right, top));
+                QuadClip.quad(vertices, pose, shapes, x + glyph.left, y + glyph.top, x + glyph.right, y + glyph.bottom,
+                        glyph.u0, glyph.v0, glyph.u1, glyph.v1, colors::color);
             }
         });
     }
@@ -144,18 +137,13 @@ public final class TextRenderer {
         }
         var setup = TextureSetup.singleTexture(layout.font.textureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
         Bounds bounds = layout.bounds;
+        var shapes = renderer.clips.shapes();
         renderer.submit(Pipelines.TEXT, setup, x + bounds.left, y + bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top, (vertices, pose) -> {
             for (Quad glyph : layout.glyphs) {
-                glyph(vertices, pose, glyph, x, y, color);
+                QuadClip.quad(vertices, pose, shapes, x + glyph.left, y + glyph.top, x + glyph.right, y + glyph.bottom,
+                        glyph.u0, glyph.v0, glyph.u1, glyph.v1, (px, py) -> color);
             }
         });
-    }
-
-    private static void glyph(VertexConsumer vertices, Matrix3x2fc pose, Quad glyph, float x, float y, int color) {
-        vertices.addVertexWith2DPose(pose, x + glyph.left, y + glyph.top).setUv(glyph.u0, glyph.v0).setColor(color);
-        vertices.addVertexWith2DPose(pose, x + glyph.left, y + glyph.bottom).setUv(glyph.u0, glyph.v1).setColor(color);
-        vertices.addVertexWith2DPose(pose, x + glyph.right, y + glyph.bottom).setUv(glyph.u1, glyph.v1).setColor(color);
-        vertices.addVertexWith2DPose(pose, x + glyph.right, y + glyph.top).setUv(glyph.u1, glyph.v0).setColor(color);
     }
 
     public void centered(String text, float centerX, float y, float size, int color) {
@@ -170,6 +158,10 @@ public final class TextRenderer {
 
     public void centeredColoredInBox(String text, float x, float y, float width, float height, float size, ColorFunction colors) {
         drawColored(text, x + (width - measure(text, size).width()) * .5f, topInBox(y, height, size), size, colors);
+    }
+
+    public float capHeight(float size) {
+        return size * CAP_HEIGHT;
     }
 
     public float topInBox(float y, float height, float size) {

@@ -34,6 +34,7 @@ public final class KeybindHudModule extends Module implements PlacedHudElement {
     private static final float ICON_SIZE = UiTokens.PANEL_ICON;
     private static final float ICON_GAP = UiTokens.PANEL_ICON_GAP;
     private static final float FONT_SIZE = UiTokens.TEXT_BODY;
+    private static final float LIST_PADDING = PADDING - (ROW_HEIGHT - FONT_SIZE * 0.727f) / 2;
     private static final float BIND_GAP = 14;
     private static final float MAX_BIND_WIDTH = 90;
     private static final float TITLE_SIZE = UiTokens.TEXT_TITLE;
@@ -89,8 +90,10 @@ public final class KeybindHudModule extends Module implements PlacedHudElement {
         }
         var rows = new ArrayList<>(animations.entrySet());
         rows.sort(Comparator.comparing(entry -> entry.getKey().name(), String.CASE_INSENSITIVE_ORDER));
-        float height = HEADER_HEIGHT;
-        for (var row : rows) height += ROW_HEIGHT * row.getValue().size.value();
+        float visibleRows = 0;
+        for (var row : rows) visibleRows += row.getValue().size.value();
+        float listPadding = LIST_PADDING * Math.min(1, visibleRows);
+        float height = HEADER_HEIGHT + visibleRows * ROW_HEIGHT + listPadding * 2;
         var pose = graphics.pose();
         pose.pushMatrix();
         pose.scale(placement.renderScale(client));
@@ -118,8 +121,8 @@ public final class KeybindHudModule extends Module implements PlacedHudElement {
                 renderer.textures.icon(Paradox.id("icons/hud/keybind.png"), x + PADDING,
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 title.draw("Keybinds", x + PADDING + ICON_SIZE + ICON_GAP,
-                        y + (HEADER_HEIGHT - title.lineHeight(TITLE_SIZE)) / 2, TITLE_SIZE, ThemeColors.text());
-                float rowY = y + HEADER_HEIGHT;
+                        title.topInBox(y, HEADER_HEIGHT, TITLE_SIZE), TITLE_SIZE, ThemeColors.text());
+                float rowY = y + HEADER_HEIGHT + listPadding;
                 for (var entry : rows) {
                     var module = entry.getKey();
                     var animation = entry.getValue();

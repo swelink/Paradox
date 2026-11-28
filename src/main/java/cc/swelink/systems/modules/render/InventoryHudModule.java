@@ -73,7 +73,7 @@ public final class InventoryHudModule extends Module implements PlacedHudElement
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 var title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
                 title.draw("Inventory", x + PADDING + ICON_SIZE + ICON_GAP,
-                        y + (HEADER_HEIGHT - title.lineHeight(UiTokens.TEXT_TITLE)) / 2, UiTokens.TEXT_TITLE, ThemeColors.text());
+                        title.topInBox(y, HEADER_HEIGHT, UiTokens.TEXT_TITLE), UiTokens.TEXT_TITLE, ThemeColors.text());
                 for (int i = 0; i < COLUMNS * ROWS; i++) {
                     renderer.sdf.roundedRect(slotX(x, i), slotY(y, i), SLOT, SLOT, UiTokens.RADIUS_CONTROL, ThemeColors.hudHeader());
                 }

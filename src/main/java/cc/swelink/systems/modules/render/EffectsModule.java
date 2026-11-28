@@ -34,10 +34,10 @@ public final class EffectsModule extends Module implements PlacedHudElement {
     private static final float MIN_WIDTH = 150;
     private static final float MAX_WIDTH = 300;
     private static final float PADDING = UiTokens.PANEL_PADDING;
-    private static final float LIST_PADDING = 4;
     private static final float HEADER_HEIGHT = UiTokens.PANEL_HEADER_HEIGHT;
     private static final float ROW_HEIGHT = UiTokens.PANEL_ROW_HEIGHT;
     private static final float ICON_SIZE = UiTokens.PANEL_ICON;
+    private static final float LIST_PADDING = PADDING - (ROW_HEIGHT - ICON_SIZE) / 2;
     private static final float ICON_GAP = UiTokens.PANEL_ICON_GAP;
     private static final float TIMER_GAP = 12;
     private static final float FONT_SIZE = UiTokens.TEXT_BODY;
@@ -92,7 +92,7 @@ public final class EffectsModule extends Module implements PlacedHudElement {
             animation.update(active.contains(entry.getKey()), delta);
         }
         effectAnimations.entrySet().removeIf(entry -> !active.contains(entry.getKey())
-                && entry.getValue().progress == 0 && entry.getValue().space() == 0);
+                && entry.getValue().space() == 0);
         float reveal = Math.clamp(visibility.update(showing ? 1 : 0, 20, 0.85f, delta), 0, 1);
         if (!showing && reveal <= 0.001f) {
             visibility.reset(0);
@@ -144,7 +144,7 @@ public final class EffectsModule extends Module implements PlacedHudElement {
                 renderer.textures.icon(Paradox.id("icons/hud/effect.png"), x + PADDING,
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 title.draw("Effects", x + PADDING + ICON_SIZE + ICON_GAP,
-                        y + (HEADER_HEIGHT - title.lineHeight(TITLE_SIZE)) / 2, TITLE_SIZE, ThemeColors.text());
+                        title.topInBox(y, HEADER_HEIGHT, TITLE_SIZE), TITLE_SIZE, ThemeColors.text());
 
                 float rowY = y + HEADER_HEIGHT + listPadding;
                 for (var animation : rows) {
@@ -156,7 +156,7 @@ public final class EffectsModule extends Module implements PlacedHudElement {
                          var rowClip = renderer.clips.push(x, rowY, width, rowHeight)) {
                         float iconX = x + PADDING;
                         float iconY = contentY + (ROW_HEIGHT - ICON_SIZE) / 2;
-                        if (reveal >= 0.999f) {
+                        if (reveal >= 0.999f && opacity >= 0.999f) {
                             PixelSnap.push(graphics, iconX, iconY, ICON_SIZE);
                         } else {
                             pose.pushMatrix();
@@ -236,15 +236,12 @@ public final class EffectsModule extends Module implements PlacedHudElement {
     }
 
     private static final class EffectAnimation {
-        private static final float DURATION = 0.22f;
         private final SpringAnimation textSize = new SpringAnimation(FONT_SIZE);
         private final SpringAnimation size = new SpringAnimation();
         private final DigitAnimation timer = new DigitAnimation(FONT_SIZE);
-        private float progress;
         private EffectRow row;
 
         private void update(boolean active, float delta) {
-            progress = Math.clamp(progress + (active ? delta : -delta) / DURATION, 0, 1);
             size.update(active ? 1 : 0, 26, 1, delta);
         }
 
@@ -253,7 +250,7 @@ public final class EffectsModule extends Module implements PlacedHudElement {
         }
 
         private float opacity() {
-            return FrameClock.smoothStep(Math.clamp((progress - 0.25f) / 0.75f, 0, 1));
+            return FrameClock.smoothStep(Math.clamp((space() - 0.2f) / 0.8f, 0, 1));
         }
     }
 }

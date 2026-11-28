@@ -114,7 +114,7 @@ public final class SpeedGraphModule extends Module implements PlacedHudElement {
                         y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, AccentWave.text());
                 var title = renderer.text.withFont(TextRenderer.Font.INTER_MEDIUM);
                 title.draw("Speed", x + PADDING + ICON_SIZE + ICON_GAP,
-                        y + (HEADER_HEIGHT - title.lineHeight(UiTokens.TEXT_TITLE)) / 2, UiTokens.TEXT_TITLE, ThemeColors.text());
+                        title.topInBox(y, HEADER_HEIGHT, UiTokens.TEXT_TITLE), UiTokens.TEXT_TITLE, ThemeColors.text());
                 long now = System.nanoTime();
                 if (now >= nextValueUpdate) {
                     valueText = String.format(Locale.ROOT, "%.2f bps", Math.max(0, displayed));

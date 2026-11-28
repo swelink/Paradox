@@ -1,7 +1,7 @@
 package cc.swelink.renderer;
 
 public enum Theme {
-    PARADOX("Paradox", 0xFF8B3DFF, 0xFF5B21B6),
+    PARADOX("Paradox", 0xFFA996F5, 0xFF4B3FD1),
     HAUNT("Haunt", 0xFFFF7518, 0xFFB8420F),
     COFFEE("Coffee", 0xFFC69263, 0xFF8B5A3C),
     SAKURA("Sakura", 0xFFFF6FA8, 0xFFFFFFFF),

@@ -39,12 +39,12 @@ final class ClickGuiDraw {
     }
 
     static void label(Renderer2D renderer, String text, float x, float centerY, float size, int color) {
-        renderer.text.draw(text, x, centerY - renderer.text.lineHeight(size) / 2, size, color);
+        renderer.text.draw(text, x, renderer.text.topInBox(centerY, 0, size), size, color);
     }
 
     static void label(Renderer2D renderer, String text, float x, float centerY, float size,
                       TextRenderer.ColorFunction colors) {
-        renderer.text.drawColored(text, x, centerY - renderer.text.lineHeight(size) / 2, size, colors);
+        renderer.text.drawColored(text, x, renderer.text.topInBox(centerY, 0, size), size, colors);
     }
 
     static ClipStack.Scope clip(Renderer2D renderer, float x, float y, float width, float height) {
